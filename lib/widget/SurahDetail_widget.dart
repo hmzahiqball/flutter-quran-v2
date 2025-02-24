@@ -115,7 +115,7 @@ class SurahDetailModal extends StatelessWidget {
           children: [
             Text("Urutan Diturunkan: ", style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
             Expanded(
-              child: Text(type, style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary)),
+              child: Text(urutan, style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary)),
             ),
           ],
         ),
