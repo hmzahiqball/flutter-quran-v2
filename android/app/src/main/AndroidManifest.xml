@@ -8,7 +8,7 @@
     <uses-feature android:name="android.hardware.sensor.compass"/>
 
     <application
-        android:label="Projek Al-Qur'an"
+        android:label="Al-Qur'an"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

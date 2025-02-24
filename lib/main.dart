@@ -26,6 +26,12 @@ class QuranApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(
+        pageTransitionsTheme: PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: CupertinoPageTransitionsBuilder(), // Slide seperti iOS
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(), // iOS default slide
+          },
+        ),
         fontFamily: GoogleFonts.outfit().fontFamily,
         colorScheme: const ColorScheme(
           brightness: Brightness.light,

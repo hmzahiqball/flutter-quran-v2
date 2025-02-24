@@ -20,10 +20,9 @@ class _HomePageState extends State<HomePage> {
   bool isSearching = false;
   TextEditingController searchController = TextEditingController();
   List searchResults = [];
-  String selectedFilter =
-      "Surah";
+  String selectedFilter = "Surah";
   int selectedIndex = 0;
-  final List<String> filters = ["Surah", "Mekah", "Madinah", "Doa"];
+  final List<String> filters = ["Surah", "Doa"];
   List surahList = [];
   List doaList = [];
   List filteredSurahList = [];
@@ -99,20 +98,11 @@ class _HomePageState extends State<HomePage> {
 
   void applyFilter() {
     setState(() {
+      // Default tanpa filter (Surah)
+      filteredSurahList = List.from(surahList);
       if (selectedIndex == 1) {
-        // Filter hanya "Mekah"
-        filteredSurahList =
-            surahList.where((surah) => surah['tempatTurun'] == 'Mekah').toList();
-      } else if (selectedIndex == 2) {
-        // Filter hanya "Madinah"
-        filteredSurahList =
-            surahList.where((surah) => surah['tempatTurun'] == 'Madinah').toList();
-      } else if (selectedIndex == 3) {
         // Default tanpa filter (doa)
         filteredSurahList = List.from(doaList);
-      } else {
-        // Default tanpa filter (Surah)
-        filteredSurahList = List.from(surahList);
       }
     });
   }
@@ -221,10 +211,20 @@ class _HomePageState extends State<HomePage> {
                   getLastRead(), // Ambil data terbaru dari SharedPreferences
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator(); // Loading indikator
+                  return LastReadCard(
+                    title: "Loading...",
+                    arabicTitle: "-",
+                    type: "-",
+                    verse: "-",
+                  );
                 }
                 if (!snapshot.hasData || snapshot.data![0] == null) {
-                  return Text("Belum ada bacaan terakhir");
+                  return LastReadCard(
+                    title: "Belum ada bacaan terakhir",
+                    arabicTitle: "-",
+                    type: "-",
+                    verse: "-",
+                  );
                 }
 
                 List<String?> lastRead = snapshot.data!;
@@ -233,7 +233,9 @@ class _HomePageState extends State<HomePage> {
                     if (lastRead[0] != null) {
                       // Cari Surah berdasarkan nama
                       var surahData = surahList.firstWhere(
-                        (surah) => surah['namaLatin'].toLowerCase() == lastRead[0]!.toLowerCase(),
+                        (surah) =>
+                            surah['namaLatin'].toLowerCase() ==
+                            lastRead[0]!.toLowerCase(),
                         orElse: () => null, // Jika tidak ditemukan, return null
                       );
 
@@ -296,7 +298,7 @@ class _HomePageState extends State<HomePage> {
                         Navigator.pushNamed(
                           context,
                           '/surah',
-                          arguments: int.parse(item['nomor']),
+                          arguments: item['nomor'],
                         ).then(
                           (_) => setState(() {}),
                         ); // Refresh FutureBuilder setelah kembali;
@@ -309,8 +311,9 @@ class _HomePageState extends State<HomePage> {
                               number: index + 1,
                               title: item['namaLatin'],
                               details:
-                                  '${item['jumlahAyat']} Ayat | ${item['tempatTurun']} | Surah ke-${item['urut']}',
+                                  '${item['jumlahAyat']} Ayat | ${item['tempatTurun']}',
                               arabicTitle: item['nama'],
+                              surahData: item, 
                             ),
                   );
                 },

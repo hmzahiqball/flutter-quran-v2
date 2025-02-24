@@ -47,7 +47,7 @@ class LastReadCard extends StatelessWidget {
               ),
               SizedBox(height: 4),
               Text(
-                verse + ' | ' + type,
+                verse != null ? verse + ' | ' + type : "",
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.secondary,
                   fontSize: 14,
@@ -56,7 +56,7 @@ class LastReadCard extends StatelessWidget {
             ],
           ),
           Text(
-            arabicTitle,
+            arabicTitle != null ? arabicTitle : "",
             style: GoogleFonts.scheherazadeNew(
               color: Theme.of(context).colorScheme.primary,
               fontSize: 20,

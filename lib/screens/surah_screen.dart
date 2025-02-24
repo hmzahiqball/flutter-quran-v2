@@ -13,8 +13,6 @@ class SurahPage extends StatefulWidget {
 }
 
 class _SurahPageState extends State<SurahPage> {
-  ScrollController _scrollController = ScrollController();
-  int? nomorAyat; // Menyimpan nomor ayat yang akan di-scroll
   Map<String, dynamic>? surahData;
   List<dynamic> ayatList = [];
   int? surahNumber;
@@ -22,7 +20,6 @@ class _SurahPageState extends State<SurahPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Ambil nomor surah dari arguments
     surahNumber = ModalRoute.of(context)?.settings.arguments as int?;
     if (surahNumber != null) {
       loadAyatData(surahNumber!);
@@ -30,23 +27,13 @@ class _SurahPageState extends State<SurahPage> {
   }
 
   Future<void> loadAyatData(int nomor) async {
-    String data = await rootBundle.loadString(
-      'assets/json/surah.json',
-    ); 
-    List<dynamic> jsonResult = json.decode(data);
+    String data = await rootBundle.loadString('assets/json/surah/$nomor.json');
+    Map<String, dynamic> jsonResult = json.decode(data);
 
-    // Cari surah dengan nomor yang sesuai
-    var selectedSurah = jsonResult.firstWhere(
-      (surah) => surah['nomor'] == nomor.toString(),
-      orElse: () => null,
-    );
-
-    if (selectedSurah != null) {
-      setState(() {
-        surahData = selectedSurah;
-        ayatList = surahData?['isi'] ?? [];
-      });
-    }
+    setState(() {
+      surahData = jsonResult['data'];
+      ayatList = surahData?['ayat'] ?? [];
+    });
   }
 
   void showSettingBottomSheet(BuildContext context) {
@@ -73,31 +60,18 @@ class _SurahPageState extends State<SurahPage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.background,
         elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 10.0),
-          child: IconButton(
-            icon: Icon(
-              Icons.arrow_back,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            onPressed: () {
-              Navigator.pop(context, true); // Kirim nilai `true` saat kembali
-            },
-          ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.primary),
+          onPressed: () => Navigator.pop(context, true),
         ),
         actions: [
           IconButton(
-            icon: Icon(
-              Icons.settings,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            onPressed: () {
-              showSettingBottomSheet(context);
-            },
+            icon: Icon(Icons.settings, color: Theme.of(context).colorScheme.primary),
+            onPressed: () => showSettingBottomSheet(context),
           ),
         ],
         title: Text(
-          surahData?['nama'] ?? 'Loading...',
+          surahData?['namaLatin'] ?? 'Loading...',
           style: TextStyle(
             color: Theme.of(context).colorScheme.primary,
             fontWeight: FontWeight.w700,
@@ -110,34 +84,28 @@ class _SurahPageState extends State<SurahPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SurahCard(
-              title: surahData?['nama'] ?? 'Loading...',
-              verse: surahData?['ayat'].toString() ?? '0',
-              type: surahData?['type'] ?? '',
-              arabicTitle: surahData?['asma'] ?? '',
+              title: surahData?['namaLatin'] ?? 'Loading...',
+              verse: surahData?['jumlahAyat'].toString() ?? '0',
+              type: surahData?['tempatTurun'] ?? '',
+              arabicTitle: surahData?['nama'] ?? '',
               arti: surahData?['arti'] ?? '',
-              nomor: surahData?['nomor'] ?? '',
+              nomor: surahData?['nomor'].toString() ?? '0',
             ),
             SizedBox(height: 20),
             Expanded(
               child: ListView.builder(
-                itemCount: ayatList.length + 1,
+                itemCount: ayatList.length,
                 itemBuilder: (context, index) {
-                  if (index == 0) {
-                    return Center(
-                      child: Image.asset('assets/images/bismillah.png', width: 250),
-                    );
-                  } else {
-                    var ayat = ayatList[index - 1];
-                    return AyatItem(
-                      title: surahData?['nama'],
-                      arabicTitle: surahData?['asma'],
-                      type: surahData?['type'],
-                      number: int.tryParse(ayat['nomor']) ?? 0,
-                      arabicText: ayat['ar'],
-                      translation: ayat['id'],
-                      latin: ayat['tr'],
-                    );
-                  }
+                  var ayat = ayatList[index];
+                  return AyatItem(
+                    title: surahData?['namaLatin'],
+                    arabicTitle: surahData?['nama'],
+                    type: surahData?['tempatTurun'],
+                    number: ayat['nomorAyat'],
+                    arabicText: ayat['teksArab'],
+                    translation: ayat['teksIndonesia'],
+                    latin: ayat['teksLatin'],
+                  );
                 },
               ),
             ),
@@ -147,4 +115,3 @@ class _SurahPageState extends State<SurahPage> {
     );
   }
 }
-

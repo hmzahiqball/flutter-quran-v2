@@ -1,19 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../widget/SurahNumber.dart';
+import 'SurahNumber.dart';
+import 'SurahDetail_widget.dart';
 
 class SuraItem extends StatelessWidget {
   final int number;
   final String title;
   final String details;
   final String arabicTitle;
+  final Map<String, dynamic> surahData;
 
   const SuraItem({
     required this.number,
     required this.title,
     required this.details,
     required this.arabicTitle,
+    required this.surahData,
   });
+
+  void showSurahDetail(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SurahDetailModal(
+          title: surahData['namaLatin'],
+          arabicTitle: surahData['nama'],
+          arti: surahData['arti'],
+          ayat: surahData['jumlahAyat'].toString(),
+          type: surahData['tempatTurun'],
+          urutan: surahData['urut'].toString(),
+          deskripsi: surahData['deskripsi'],
+          audio: surahData['audioFull']['01'], // Ambil salah satu audio
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +64,23 @@ class SuraItem extends StatelessWidget {
               ),
             ],
           ),
-          Text(arabicTitle, style: GoogleFonts.scheherazadeNew(color: Theme.of(context).colorScheme.primary, fontSize: 22, fontWeight: FontWeight.bold)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(
+                arabicTitle,
+                style: GoogleFonts.scheherazadeNew(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.more_vert),
+                onPressed: () => showSurahDetail(context)
+              ),
+            ],
+          ),
         ],
       ),
     );

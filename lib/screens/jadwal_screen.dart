@@ -202,8 +202,8 @@ class _JadwalPageState extends State<JadwalPage> {
             ),
             SizedBox(height: 15),
             JadwalCard(
-              keterangan: keteranganWaktu ?? "cb",
-              estimasi: estimasi ?? "cb",
+              keterangan: keteranganWaktu ?? "Loading...",
+              estimasi: estimasi ?? "-",
               lokasi: 'Bandung',
             ),
             SizedBox(height: 15),
