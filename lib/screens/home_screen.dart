@@ -350,10 +350,10 @@ class _HomePageState extends State<HomePage> {
         onTap: (index) {
           switch (index) {
             case 0:
-              Navigator.pushNamed(context, '/home');
+              Navigator.pushReplacementNamed(context, '/home');
               break;
             case 1:
-              Navigator.pushNamed(context, '/jadwal');
+              Navigator.pushReplacementNamed(context, '/jadwal');
               break;
             case 2:
               showSettingBottomSheet(context);

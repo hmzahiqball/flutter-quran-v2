@@ -145,18 +145,17 @@ class _JadwalPageState extends State<JadwalPage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.background,
         elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 10.0),
-          child: IconButton(
-            icon: Icon(
-              Icons.arrow_back,
-              color: Theme.of(context).colorScheme.primary,
+        title: 
+          Padding(
+            padding: const EdgeInsets.only(left: 10.0),
+            child: Text(
+              "Jadwal Sholat Hari Ini",
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
           ),
-        ),
         actions: [
           IconButton(
             icon: Icon(
@@ -168,13 +167,6 @@ class _JadwalPageState extends State<JadwalPage> {
             },
           ),
         ],
-        title: Text(
-          'Jadwal Sholat Hari Ini',
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.primary,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 10.0),
@@ -253,10 +245,10 @@ class _JadwalPageState extends State<JadwalPage> {
         onTap: (index) {
           switch (index) {
             case 0:
-              Navigator.pushNamed(context, '/home');
+              Navigator.pushReplacementNamed(context, '/home');
               break;
             case 1:
-              Navigator.pushNamed(context, '/jadwal');
+              Navigator.pushReplacementNamed(context, '/jadwal');
               break;
             case 2:
               showSettingBottomSheet(context);
