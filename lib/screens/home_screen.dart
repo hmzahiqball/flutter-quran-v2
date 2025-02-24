@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_quran/widget/LastReadCard_widget.dart';
 import 'package:flutter_quran/widget/FilterBar_widget.dart';
 import 'package:flutter_quran/widget/SuraItem_widget.dart';
 import 'package:flutter_quran/widget/DoaItem_widget.dart';
 import 'package:flutter_quran/widget/DoaModal_widget.dart';
 import 'package:flutter_quran/widget/Settings_widget.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,12 +19,14 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   bool isSearching = false;
   TextEditingController searchController = TextEditingController();
-  List surahList = [];
-  List doaList = [];
   List searchResults = [];
-  String selectedFilter = "Surah";
+  String selectedFilter =
+      "Surah";
   int selectedIndex = 0;
   final List<String> filters = ["Surah", "Mekah", "Madinah", "Doa"];
+  List surahList = [];
+  List doaList = [];
+  List filteredSurahList = [];
 
   @override
   void initState() {
@@ -33,60 +35,84 @@ class _HomePageState extends State<HomePage> {
     loadDoaData();
   }
 
-  Future<void> loadSurahData() async {
-    String data = await rootBundle.loadString('assets/json/surah.json');
-    Map<String, dynamic> jsonResult = json.decode(data);
-    setState(() {
-      surahList = jsonResult['data'];
-    });
-  }
-
-  Future<void> loadDoaData() async {
-    String data = await rootBundle.loadString('assets/json/doa.json');
-    List<dynamic> jsonResult = json.decode(data);
-    setState(() {
-      doaList = jsonResult;
-    });
-  }
-
   Future<List<String?>> getLastRead() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.reload();
+    String? surah = prefs.getString('lastReadSurah');
+    String? surahArabic = prefs.getString('lastReadSurahArabic');
+    String? surahType = prefs.getString('lastReadSurahType');
+    int? ayat = prefs.getInt('lastReadAyat');
     return [
-      prefs.getString('lastReadSurah'),
-      prefs.getString('lastReadSurahArabic'),
-      prefs.getString('lastReadSurahType'),
-      prefs.getInt('lastReadAyat')?.toString(),
+      surah,
+      surahArabic,
+      surahType,
+      ayat != null ? ayat.toString() : null,
     ];
   }
 
   void searchData(String query) {
     setState(() {
-      searchResults = query.isEmpty
-          ? []
-          : surahList
-              .where((surah) => surah['namaLatin'].toLowerCase().contains(query.toLowerCase()))
-              .toList()
-              ..addAll(
-                doaList.where((doa) => doa['doa'].toLowerCase().contains(query.toLowerCase())),
-              );
+      if (query.isEmpty) {
+        searchResults.clear();
+      } else {
+        searchResults =
+            surahList
+                .where(
+                  (surah) =>
+                      surah['namaLatin'].toLowerCase().contains(
+                        query.toLowerCase(),
+                      ) ||
+                      surah['arti'].toLowerCase().contains(query.toLowerCase()),
+                )
+                .toList();
+
+        searchResults.addAll(
+          doaList
+              .where(
+                (doa) => doa['doa'].toLowerCase().contains(query.toLowerCase()),
+              )
+              .toList(),
+        );
+      }
+    });
+  }
+
+  Future<void> loadSurahData() async {
+    String data = await rootBundle.loadString('assets/json/surah.json');
+    // List<dynamic> jsonResult = json.decode(data);
+    Map<String, dynamic> jsonResult = json.decode(data);
+
+    setState(() {
+      surahList = jsonResult['data'];
+      filteredSurahList = List.from(surahList); // Default tanpa filter
+    });
+  }
+
+  Future<void> loadDoaData() async {
+    String data = await rootBundle.loadString('assets/json/doa.json');
+    List<dynamic> doajsonResult = json.decode(data);
+
+    setState(() {
+      doaList = doajsonResult;
     });
   }
 
   void applyFilter() {
     setState(() {
-      switch (selectedIndex) {
-        case 1:
-          surahList = surahList.where((surah) => surah['tempatTurun'] == 'Mekah').toList();
-          break;
-        case 2:
-          surahList = surahList.where((surah) => surah['tempatTurun'] == 'Madinah').toList();
-          break;
-        case 3:
-          surahList = doaList;
-          break;
-        default:
-          loadSurahData();
+      if (selectedIndex == 1) {
+        // Filter hanya "Mekah"
+        filteredSurahList =
+            surahList.where((surah) => surah['tempatTurun'] == 'Mekah').toList();
+      } else if (selectedIndex == 2) {
+        // Filter hanya "Madinah"
+        filteredSurahList =
+            surahList.where((surah) => surah['tempatTurun'] == 'Madinah').toList();
+      } else if (selectedIndex == 3) {
+        // Default tanpa filter (doa)
+        filteredSurahList = List.from(doaList);
+      } else {
+        // Default tanpa filter (Surah)
+        filteredSurahList = List.from(surahList);
       }
     });
   }
@@ -95,69 +121,148 @@ class _HomePageState extends State<HomePage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => DoaBottomSheet(
-        title: doa['doa'],
-        arabicText: doa['ayat'],
-        latinText: doa['latin'],
-        translation: doa['artinya'],
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      builder: (context) {
+        return DoaBottomSheet(
+          title: doa['doa'],
+          arabicText: doa['ayat'],
+          latinText: doa['latin'],
+          translation: doa['artinya'],
+        );
+      },
+    );
+  }
+
+  void showSettingBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SettingsWidget();
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Color(0xFFF9F9F9),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.background,
         elevation: 0,
-        title: isSearching
-            ? TextField(
-                controller: searchController,
-                autofocus: true,
-                decoration: InputDecoration(hintText: "Cari Surah atau Doa..."),
-                onChanged: searchData,
-              )
-            : Text(
-                "Al-Qur'an & Doa",
-                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-              ),
+        title:
+            isSearching
+                ? Padding(
+                  padding: const EdgeInsets.only(left: 10.0),
+                  child: TextField(
+                    controller: searchController,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: "Cari Surah atau Doa...",
+                      border: InputBorder.none,
+                    ),
+                    onChanged: searchData,
+                  ),
+                )
+                : Padding(
+                  padding: const EdgeInsets.only(left: 10.0),
+                  child: Text(
+                    "Al-Qur'an & Doa",
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
         actions: [
-          IconButton(
-            icon: Icon(isSearching ? Icons.close : Icons.search),
-            onPressed: () {
-              setState(() {
-                isSearching = !isSearching;
-                searchController.clear();
-                searchResults.clear();
-              });
-            },
-          )
+          isSearching
+              ? IconButton(
+                icon: Icon(Icons.close),
+                onPressed: () {
+                  setState(() {
+                    isSearching = false;
+                    searchController.clear();
+                    searchResults.clear();
+                  });
+                },
+              )
+              : IconButton(
+                icon: Icon(Icons.search),
+                onPressed: () {
+                  setState(() {
+                    isSearching = true;
+                  });
+                },
+              ),
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 10.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            FutureBuilder<List<String?>> (
-              future: getLastRead(),
+            Text(
+              'Last Read',
+              style: TextStyle(
+                fontSize: 18,
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            SizedBox(height: 15),
+
+            FutureBuilder<List<String?>>(
+              future:
+                  getLastRead(), // Ambil data terbaru dari SharedPreferences
               builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator(); // Loading indikator
+                }
                 if (!snapshot.hasData || snapshot.data![0] == null) {
                   return Text("Belum ada bacaan terakhir");
                 }
+
+                List<String?> lastRead = snapshot.data!;
                 return GestureDetector(
-                  onTap: () => Navigator.pushNamed(context, '/surah', arguments: int.parse(snapshot.data![0]!)),
+                  onTap: () {
+                    if (lastRead[0] != null) {
+                      // Cari Surah berdasarkan nama
+                      var surahData = surahList.firstWhere(
+                        (surah) => surah['namaLatin'].toLowerCase() == lastRead[0]!.toLowerCase(),
+                        orElse: () => null, // Jika tidak ditemukan, return null
+                      );
+
+                      if (surahData != null) {
+                        int nomorSurah = int.parse(surahData['nomor']);
+                        Navigator.pushNamed(
+                          context,
+                          '/surah',
+                          arguments: (nomorSurah),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Surah tidak ditemukan")),
+                        );
+                      }
+                    }
+                  },
                   child: LastReadCard(
-                    title: snapshot.data![0]!,
-                    arabicTitle: snapshot.data![1]!,
-                    type: snapshot.data![2]!,
-                    verse: snapshot.data![3] != null ? "Ayat ${snapshot.data![3]}" : "",
+                    title: lastRead[0] ?? "",
+                    arabicTitle: lastRead[1] ?? "",
+                    type: lastRead[2] ?? "",
+                    verse: lastRead[3] != null ? "Ayat ${lastRead[3]}" : "",
                   ),
                 );
               },
             ),
+
             SizedBox(height: 16),
+
             FilterBar(
               filters: filters,
               selectedIndex: selectedIndex,
@@ -168,30 +273,90 @@ class _HomePageState extends State<HomePage> {
                 });
               },
             ),
+
             SizedBox(height: 10),
             Expanded(
               child: ListView.builder(
-                itemCount: searchResults.isNotEmpty ? searchResults.length : surahList.length,
+                itemCount:
+                    searchResults.isNotEmpty
+                        ? searchResults.length
+                        : filteredSurahList.length,
                 itemBuilder: (context, index) {
-                  var item = searchResults.isNotEmpty ? searchResults[index] : surahList[index];
+                  var item =
+                      searchResults.isNotEmpty
+                          ? searchResults[index]
+                          : filteredSurahList[index];
+
                   return GestureDetector(
-                    onTap: () => item.containsKey('doa')
-                        ? showDoaBottomSheet(context, item)
-                        : Navigator.pushNamed(context, '/surah', arguments: item['nomor']),
-                    child: item.containsKey('doa')
-                        ? DoaItem(number: index + 1, title: item['doa'])
-                        : SuraItem(
-                            number: index + 1,
-                            title: item['namaLatin'],
-                            details: '${item['jumlahAyat']} Ayat | ${item['tempatTurun']} | Surah ke-${item['nomor']}',
-                            arabicTitle: item['nama'],
-                          ),
+                    onTap: () {
+                      if (item.containsKey('doa')) {
+                        // Navigator.pushNamed(context, '/doa', arguments: item['id']);
+                        showDoaBottomSheet(context, item);
+                      } else {
+                        Navigator.pushNamed(
+                          context,
+                          '/surah',
+                          arguments: int.parse(item['nomor']),
+                        ).then(
+                          (_) => setState(() {}),
+                        ); // Refresh FutureBuilder setelah kembali;
+                      }
+                    },
+                    child:
+                        item.containsKey('doa')
+                            ? DoaItem(number: index + 1, title: item['doa'])
+                            : SuraItem(
+                              number: index + 1,
+                              title: item['namaLatin'],
+                              details:
+                                  '${item['jumlahAyat']} Ayat | ${item['tempatTurun']} | Surah ke-${item['urut']}',
+                              arabicTitle: item['nama'],
+                            ),
                   );
                 },
               ),
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.home,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.schedule,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
+            label: 'Jadwal Adzan',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.settings,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
+            label: 'Settings',
+          ),
+        ],
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              Navigator.pushNamed(context, '/home');
+              break;
+            case 1:
+              Navigator.pushNamed(context, '/jadwal');
+              break;
+            case 2:
+              showSettingBottomSheet(context);
+              break;
+          }
+        },
       ),
     );
   }
