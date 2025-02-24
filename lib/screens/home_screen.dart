@@ -240,16 +240,16 @@ class _HomePageState extends State<HomePage> {
                       );
 
                       if (surahData != null) {
-                        int nomorSurah = int.parse(surahData['nomor']);
                         Navigator.pushNamed(
                           context,
                           '/surah',
-                          arguments: (nomorSurah),
+                          arguments: surahData['nomor'],
                         );
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text("Surah tidak ditemukan")),
                         );
+                        print("masuk");
                       }
                     }
                   },
@@ -292,7 +292,6 @@ class _HomePageState extends State<HomePage> {
                   return GestureDetector(
                     onTap: () {
                       if (item.containsKey('doa')) {
-                        // Navigator.pushNamed(context, '/doa', arguments: item['id']);
                         showDoaBottomSheet(context, item);
                       } else {
                         Navigator.pushNamed(
@@ -313,7 +312,7 @@ class _HomePageState extends State<HomePage> {
                               details:
                                   '${item['jumlahAyat']} Ayat | ${item['tempatTurun']}',
                               arabicTitle: item['nama'],
-                              surahData: item, 
+                              surahData: item,
                             ),
                   );
                 },
