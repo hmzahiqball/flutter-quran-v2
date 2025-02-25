@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_quran/widget/JadwalCard_widget.dart';
 import 'package:flutter_quran/widget/JadwalItem_widget.dart';
 import 'package:flutter_quran/widget/Settings_widget.dart';
+import 'package:flutter_quran/widget/ListKota_widget.dart';
 import 'package:hijri/hijri_calendar.dart';
 
 class JadwalPage extends StatefulWidget {
@@ -26,7 +27,7 @@ class _JadwalPageState extends State<JadwalPage> {
   @override
   void initState() {
     super.initState();
-    fetchJadwalSholat();
+    loadSavedLocation();
   }
 
   Future<void> loadSavedLocation() async {
@@ -152,16 +153,7 @@ class _JadwalPageState extends State<JadwalPage> {
     );
   }
 
-  void showLocationPicker(BuildContext context) async {
-    final response = await http.get(
-      Uri.parse(
-        'https://raw.githubusercontent.com/lakuapik/jadwalsholatorg/master/kota.json',
-      ),
-    );
-    if (response.statusCode != 200) return;
-
-    List<String> cities = List<String>.from(json.decode(response.body));
-
+  void showLocationPicker(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -169,31 +161,13 @@ class _JadwalPageState extends State<JadwalPage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.4,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: ListView.builder(
-            itemCount: cities.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text(cities[index]),
-                onTap: () async {
-                  SharedPreferences prefs =
-                      await SharedPreferences.getInstance();
-                  await prefs.setString('selected_location', cities[index]);
-                  setState(() {
-                    lokasi = cities[index];
-                  });
-                  fetchJadwalSholat();
-                  Navigator.pop(context);
-                },
-              );
-            },
-          ),
+        return LocationPickerWidget(
+          onLocationSelected: (selectedLocation) {
+            setState(() {
+              lokasi = selectedLocation;
+            });
+            fetchJadwalSholat();
+          },
         );
       },
     );
@@ -255,7 +229,7 @@ class _JadwalPageState extends State<JadwalPage> {
             JadwalCard(
               keterangan: keteranganWaktu ?? "Loading...",
               estimasi: estimasi ?? "-",
-              lokasi: 'Bandung',
+              lokasi: lokasi,
               onTapLocation: () => showLocationPicker(context),
             ),
             SizedBox(height: 15),
