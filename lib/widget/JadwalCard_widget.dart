@@ -4,11 +4,13 @@ class JadwalCard extends StatelessWidget {
   final String keterangan;
   final String estimasi;
   final String lokasi;
+  final VoidCallback onTapLocation;
 
   JadwalCard({
     required this.keterangan,
     required this.estimasi,
     required this.lokasi,
+    required this.onTapLocation,
     Key? key,
   }) : super(key: key);
 
@@ -43,12 +45,29 @@ class JadwalCard extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 4),
-              Text(
-                estimasi + ' | ' + lokasi,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.secondary,
-                  fontSize: 14,
-                ),
+              Row(
+                children: [
+                  Text(
+                    estimasi,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.secondary,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(' | '),
+                  GestureDetector(
+                    onTap: onTapLocation, // Memanggil fungsi ketika lokasi diklik
+                    child: Text(
+                      lokasi,
+                      style: TextStyle(
+                        decoration: TextDecoration.underline,
+                        color: Theme.of(context).colorScheme.secondary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

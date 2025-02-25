@@ -133,7 +133,7 @@ class _SurahPageState extends State<SurahPage> {
                     );
                   }
 
-                  return SizedBox(); // Jaga-jaga kalau ada index error
+                  return SizedBox();
                 }
               ),
             ),

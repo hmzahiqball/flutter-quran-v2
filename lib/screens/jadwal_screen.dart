@@ -20,11 +20,23 @@ class _JadwalPageState extends State<JadwalPage> {
   bool isLoading = true;
   String? keteranganWaktu;
   String? estimasi;
+  String lokasi = 'bandung'; // Default lokasi
   var _format = HijriCalendar.now();
 
   @override
   void initState() {
     super.initState();
+    fetchJadwalSholat();
+  }
+
+  Future<void> loadSavedLocation() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? savedLocation = prefs.getString('selected_location');
+    if (savedLocation != null) {
+      setState(() {
+        lokasi = savedLocation;
+      });
+    }
     fetchJadwalSholat();
   }
 
@@ -34,8 +46,8 @@ class _JadwalPageState extends State<JadwalPage> {
     String bulan = DateFormat('MM').format(DateTime.now());
     String tanggalHariIni = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
-    String? cachedData = prefs.getString('jadwal_sholat');
-    String? cachedDate = prefs.getString('tanggal_sholat');
+    String? cachedData = prefs.getString('jadwal_sholat_$lokasi');
+    String? cachedDate = prefs.getString('tanggal_sholat_$lokasi');
 
     if (cachedData != null && cachedDate == tanggalHariIni) {
       setState(() {
@@ -47,7 +59,7 @@ class _JadwalPageState extends State<JadwalPage> {
     }
 
     String url =
-        'https://raw.githubusercontent.com/lakuapik/jadwalsholatorg/master/adzan/bandung/$tahun/$bulan.json';
+        'https://raw.githubusercontent.com/lakuapik/jadwalsholatorg/master/adzan/$lokasi/$tahun/$bulan.json';
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
@@ -68,8 +80,8 @@ class _JadwalPageState extends State<JadwalPage> {
             'Maghrib': jadwal['magrib'],
             'Isya': jadwal['isya'],
           };
-          prefs.setString('jadwal_sholat', json.encode(jadwalHariIni));
-          prefs.setString('tanggal_sholat', tanggalHariIni);
+          prefs.setString('jadwal_sholat_$lokasi', json.encode(jadwalHariIni));
+          prefs.setString('tanggal_sholat_$lokasi', tanggalHariIni);
         }
       }
     } catch (e) {
@@ -103,7 +115,7 @@ class _JadwalPageState extends State<JadwalPage> {
         int selisihMenit = waktuSholatDateTime.difference(now).inMinutes;
         int selisihJam = selisihMenit ~/ 60;
         int sisaMenit = selisihMenit % 60;
-        
+
         if (waktuSholatDateTime.difference(now).inMinutes <= 30) {
           keteranganWaktu = "Menjelang Waktu ${namaSholat[i]}";
         } else {
@@ -112,9 +124,10 @@ class _JadwalPageState extends State<JadwalPage> {
                   ? "Waktu ${namaSholat[i - 1]}"
                   : "Menunggu Waktu ${namaSholat[i]}";
         }
-        estimasi = selisihJam > 0
-            ? "$selisihJam Jam $sisaMenit Menit menuju ${namaSholat[i]}"
-            : "$selisihMenit Menit menuju ${namaSholat[i]}";
+        estimasi =
+            selisihJam > 0
+                ? "$selisihJam Jam $sisaMenit Menit menuju ${namaSholat[i]}"
+                : "$selisihMenit Menit menuju ${namaSholat[i]}";
         return;
       }
     }
@@ -139,23 +152,69 @@ class _JadwalPageState extends State<JadwalPage> {
     );
   }
 
+  void showLocationPicker(BuildContext context) async {
+    final response = await http.get(
+      Uri.parse(
+        'https://raw.githubusercontent.com/lakuapik/jadwalsholatorg/master/kota.json',
+      ),
+    );
+    if (response.statusCode != 200) return;
+
+    List<String> cities = List<String>.from(json.decode(response.body));
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.4,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: ListView.builder(
+            itemCount: cities.length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                title: Text(cities[index]),
+                onTap: () async {
+                  SharedPreferences prefs =
+                      await SharedPreferences.getInstance();
+                  await prefs.setString('selected_location', cities[index]);
+                  setState(() {
+                    lokasi = cities[index];
+                  });
+                  fetchJadwalSholat();
+                  Navigator.pop(context);
+                },
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.background,
         elevation: 0,
-        title: 
-          Padding(
-            padding: const EdgeInsets.only(left: 10.0),
-            child: Text(
-              "Jadwal Sholat Hari Ini",
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.w700,
-              ),
+        title: Padding(
+          padding: const EdgeInsets.only(left: 10.0),
+          child: Text(
+            "Jadwal Sholat Hari Ini",
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w700,
             ),
           ),
+        ),
         actions: [
           IconButton(
             icon: Icon(
@@ -197,6 +256,7 @@ class _JadwalPageState extends State<JadwalPage> {
               keterangan: keteranganWaktu ?? "Loading...",
               estimasi: estimasi ?? "-",
               lokasi: 'Bandung',
+              onTapLocation: () => showLocationPicker(context),
             ),
             SizedBox(height: 15),
             Expanded(
@@ -260,4 +320,3 @@ class _JadwalPageState extends State<JadwalPage> {
     );
   }
 }
-
