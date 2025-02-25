@@ -118,27 +118,11 @@ class AyatItem extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 5),
-          // Html(
-          //   data: latin,
-          //   style: {
-          //     "strong": Style(
-          //       fontSize: FontSize(15),
-          //       fontWeight: FontWeight.bold,
-          //       color: Theme.of(context).colorScheme.secondary,
-          //     ),
-          //     "u": Style(
-          //       fontSize: FontSize(15),
-          //       fontWeight: FontWeight.bold,
-          //       textDecoration: TextDecoration.underline,
-          //       color: Theme.of(context).colorScheme.secondary,
-          //     ),
-          //     "body": Style(
-          //       fontSize: FontSize(15),
-          //       fontWeight: FontWeight.bold,
-          //       padding: HtmlPaddings.zero,
-          //     ),
-          //   },
-          // ),
+            Text(
+              latin,
+              style: TextStyle(fontSize: settings.latinFontSize, color: Theme.of(context).colorScheme.primary),
+            ),
+            const SizedBox(height: 5),
             Text(
               translation,
               style: TextStyle(fontSize: settings.translationFontSize, color: Theme.of(context).colorScheme.secondary),

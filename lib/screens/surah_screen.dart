@@ -61,12 +61,18 @@ class _SurahPageState extends State<SurahPage> {
         backgroundColor: Theme.of(context).colorScheme.background,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.primary),
+          icon: Icon(
+            Icons.arrow_back,
+            color: Theme.of(context).colorScheme.primary,
+          ),
           onPressed: () => Navigator.pop(context, true),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.settings, color: Theme.of(context).colorScheme.primary),
+            icon: Icon(
+              Icons.settings,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             onPressed: () => showSettingBottomSheet(context),
           ),
         ],
@@ -94,27 +100,56 @@ class _SurahPageState extends State<SurahPage> {
             SizedBox(height: 20),
             Expanded(
               child: ListView.builder(
-                itemCount: ayatList.length + 1,
+                itemCount: surahData?['nomor'].toString() != '1'
+                    ? ayatList.length + 1
+                    : ayatList.length,
                 itemBuilder: (context, index) {
                   if (surahData?['nomor'].toString() != '1' && index == 0) {
                     return Center(
-                      child: Image.asset('assets/images/bismillah.png', width: 200),
+                      child: Image.asset(
+                        'assets/images/bismillah.png',
+                        width: 200,
+                      ),
                     );
                   } else {
-                    var ayat = ayatList[index];
+                    var ayat =
+                        surahData?['nomor'].toString() == '1' ? ayatList[index] : ayatList[index - 1];
                     return AyatItem(
-                    title: surahData?['namaLatin'],
-                    arabicTitle: surahData?['nama'],
-                    type: surahData?['tempatTurun'],
-                    number: ayat['nomorAyat'],
-                    arabicText: ayat['teksArab'],
-                    translation: ayat['teksIndonesia'],
-                    latin: ayat['teksLatin'],
-                  );
+                      title: surahData?['namaLatin'],
+                      arabicTitle: surahData?['nama'],
+                      type: surahData?['tempatTurun'],
+                      number: ayat['nomorAyat'],
+                      arabicText: ayat['teksArab'],
+                      translation: ayat['teksIndonesia'],
+                      latin: ayat['teksLatin'],
+                    );
                   }
                 },
               ),
             ),
+            // Expanded(
+            //   child: ListView.builder(
+            //     itemCount: ayatList.length,
+            //     itemBuilder: (context, index) {
+            //       Center(
+            //         child: Image.asset(
+            //           'assets/images/bismillah.png',
+            //           width: 200,
+            //         ),
+            //       );
+            //       var ayat = ayatList[index];
+            //       return AyatItem(
+            //         title: surahData?['namaLatin'],
+            //         arabicTitle: surahData?['nama'],
+            //         type: surahData?['tempatTurun'],
+            //         number: ayat['nomorAyat'],
+            //         arabicText: ayat['teksArab'],
+            //         translation: ayat['teksIndonesia'],
+            //         latin: ayat['teksLatin'],
+            //       );
+            //     },
+            //   ),
+            // ),
           ],
         ),
       ),
