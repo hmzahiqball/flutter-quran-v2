@@ -91,18 +91,9 @@ class _SurahPageState extends State<SurahPage> {
           children: [
             Expanded(
               child: ListView.builder(
-                itemCount: surahData?['nomor'].toString() != '1'
-                    ? ayatList.length + 1
-                    : ayatList.length,
+                itemCount: ayatList.length + (surahData?['nomor'].toString() != '1' ? 2 : 1),
                 itemBuilder: (context, index) {
-                  if (surahData?['nomor'].toString() != '1' && index == 0) {
-                    return Center(
-                      child: Image.asset(
-                        'assets/images/bismillah.png',
-                        width: 200,
-                      ),
-                    );
-                  } else if (index == 0) {
+                  if (index == 0) {
                     return SurahCard(
                       title: surahData?['namaLatin'] ?? 'Loading...',
                       verse: surahData?['jumlahAyat'].toString() ?? '0',
@@ -111,10 +102,26 @@ class _SurahPageState extends State<SurahPage> {
                       arti: surahData?['arti'] ?? '',
                       urutan: surahData?['urut'].toString() ?? 'Tidak diketahui',
                     );
-                  } else {
-                    var ayat =
-                        // surahData?['nomor'].toString() == '1' ? ayatList[index - 1] : ayatList[index - 2];
-                        surahData?['nomor'].toString() == '1' ? ayatList[index - 1] : ayatList[index - 1];
+                  } 
+                  else if (surahData?['nomor'].toString() != '1' && index == 1) {
+                    return Container(
+                      margin: EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: Image.asset(
+                          'assets/images/bismillah.png',
+                          width: 200,
+                        ),
+                      ),
+                    );
+                  }
+
+                  // Hitung index dengan benar agar semua ayat muncul
+                  int ayatIndex = (surahData?['nomor'].toString() != '1') ? index - 2 : index - 1;
+
+                  // Pastikan index tidak out of range
+                  if (ayatIndex < ayatList.length) {
+                    var ayat = ayatList[ayatIndex];
+
                     return AyatItem(
                       title: surahData?['namaLatin'],
                       arabicTitle: surahData?['nama'],
@@ -125,7 +132,9 @@ class _SurahPageState extends State<SurahPage> {
                       latin: ayat['teksLatin'],
                     );
                   }
-                },
+
+                  return SizedBox(); // Jaga-jaga kalau ada index error
+                }
               ),
             ),
           ],
