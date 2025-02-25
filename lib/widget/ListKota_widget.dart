@@ -6,7 +6,8 @@ import 'package:http/http.dart' as http;
 class LocationPickerWidget extends StatefulWidget {
   final Function(String) onLocationSelected;
 
-  const LocationPickerWidget({Key? key, required this.onLocationSelected}) : super(key: key);
+  const LocationPickerWidget({Key? key, required this.onLocationSelected})
+      : super(key: key);
 
   @override
   _LocationPickerWidgetState createState() => _LocationPickerWidgetState();
@@ -14,7 +15,9 @@ class LocationPickerWidget extends StatefulWidget {
 
 class _LocationPickerWidgetState extends State<LocationPickerWidget> {
   List<String> cities = [];
+  List<String> filteredCities = [];
   bool isLoading = true;
+  String searchQuery = '';
 
   @override
   void initState() {
@@ -24,12 +27,14 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
 
   Future<void> fetchCities() async {
     final response = await http.get(
-      Uri.parse('https://raw.githubusercontent.com/lakuapik/jadwalsholatorg/master/kota.json'),
+      Uri.parse(
+          'https://raw.githubusercontent.com/lakuapik/jadwalsholatorg/master/kota.json'),
     );
 
     if (response.statusCode == 200) {
       setState(() {
         cities = List<String>.from(json.decode(response.body));
+        filteredCities = List.from(cities); // Inisialisasi list yang difilter
         isLoading = false;
       });
     } else {
@@ -37,6 +42,20 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
         isLoading = false;
       });
     }
+  }
+
+  void filterSearchResults(String query) {
+    setState(() {
+      searchQuery = query;
+      if (query.isEmpty) {
+        filteredCities = List.from(cities);
+      } else {
+        filteredCities = cities
+            .where((city) =>
+                city.toLowerCase().startsWith(query.toLowerCase())) // Pencarian mulai dari huruf pertama
+            .toList();
+      }
+    });
   }
 
   @override
@@ -70,18 +89,44 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
               ),
             ),
           ),
+          SizedBox(height: 15),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: TextField(
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    hintText: 'Cari Kotamu Disini !',
+                    hintStyle: TextStyle(
+                      color: Colors.grey[400],
+                    ),
+                  ),
+                  onChanged: filterSearchResults,
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: 10),
           isLoading
               ? Expanded(child: Center(child: CircularProgressIndicator()))
               : Expanded(
                   child: ListView.builder(
-                    itemCount: cities.length,
+                    itemCount: filteredCities.length,
                     itemBuilder: (context, index) {
+                      final city = filteredCities[index];
                       return ListTile(
-                        title: Text(cities[index]),
+                        title: Text(city),
                         onTap: () async {
-                          SharedPreferences prefs = await SharedPreferences.getInstance();
-                          await prefs.setString('selected_location', cities[index]);
-                          widget.onLocationSelected(cities[index]);
+                          SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
+                          await prefs.setString('selected_location', city);
+                          widget.onLocationSelected(city);
                           Navigator.pop(context);
                         },
                       );
