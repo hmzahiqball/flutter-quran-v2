@@ -42,6 +42,7 @@ class SuraItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
     return Container(
       padding: EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
@@ -57,9 +58,9 @@ class SuraItem extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+                  Text(title, style: TextStyle(fontSize: width * 0.042, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
                   SizedBox(height: 7),
-                  Text(details, style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.secondary)),
+                  Text(details, style: TextStyle(fontSize: width * 0.038, color: Theme.of(context).colorScheme.secondary)),
                 ],
               ),
             ],
@@ -71,7 +72,8 @@ class SuraItem extends StatelessWidget {
                 arabicTitle,
                 style: GoogleFonts.scheherazadeNew(
                   color: Theme.of(context).colorScheme.primary,
-                  fontSize: 20,
+                  fontSize: width * 0.055,
+                  // fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),

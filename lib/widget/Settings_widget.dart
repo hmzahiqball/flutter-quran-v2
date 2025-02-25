@@ -12,6 +12,7 @@ class SettingsWidget extends StatefulWidget {
 
 class _SettingsWidgetState extends State<SettingsWidget> {
   int _arabicFontSize = 22;
+  int _latinFontSize = 16;
   int _translationFontSize = 16;
 
   @override
@@ -24,6 +25,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _arabicFontSize = (prefs.getInt('arabicFontSize') ?? 22);
+      _latinFontSize = (prefs.getInt('latinFontSize') ?? 22);
       _translationFontSize = (prefs.getInt('translationFontSize') ?? 16);
     });
   }
@@ -31,6 +33,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   _saveSettings() async {
     final prefs = await SharedPreferences.getInstance();
     prefs.setInt('arabicFontSize', _arabicFontSize);
+    prefs.setInt('latinFontSize', _latinFontSize);
     prefs.setInt('translationFontSize', _translationFontSize);
   }
 
@@ -38,7 +41,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   Widget build(BuildContext context) {
     final settings = Provider.of<SettingsProvider>(context);
     return Container(
-      height: MediaQuery.of(context).size.height * 0.3,
+      height: MediaQuery.of(context).size.height * 0.4,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -99,6 +102,27 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                   settings.setTranslationFontSize(value);
                   setState(() {
                     _translationFontSize = value.round();
+                  });
+                  _saveSettings();
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Latin Teks', style: TextStyle(fontSize: 22)),
+              Slider(
+                value: _latinFontSize.toDouble(),
+                min: 12,
+                max: 24,
+                divisions: 16,
+                label: _latinFontSize.round().toString(),
+                onChanged: (value) {
+                  settings.setlatinFontSize(value);
+                  setState(() {
+                    _latinFontSize = value.round();
                   });
                   _saveSettings();
                 },

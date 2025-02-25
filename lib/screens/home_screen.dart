@@ -140,6 +140,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: Color(0xFFF9F9F9),
       appBar: AppBar(
@@ -199,7 +200,7 @@ class _HomePageState extends State<HomePage> {
             Text(
               'Last Read',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: width * 0.05,
                 color: Theme.of(context).colorScheme.primary,
                 fontWeight: FontWeight.w500,
               ),

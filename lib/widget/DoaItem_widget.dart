@@ -12,6 +12,7 @@ class DoaItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
     return Container(
       padding: EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
@@ -27,7 +28,7 @@ class DoaItem extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+                  Text(title, style: TextStyle(fontSize: width * 0.04, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
                 ],
               ),
             ],

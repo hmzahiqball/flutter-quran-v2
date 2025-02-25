@@ -17,6 +17,7 @@ class LastReadCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(16),
@@ -41,7 +42,7 @@ class LastReadCard extends StatelessWidget {
                 title,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.primary,
-                  fontSize: 18,
+                  fontSize: width * 0.05,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -50,7 +51,7 @@ class LastReadCard extends StatelessWidget {
                 verse != null ? verse + ' | ' + type : "",
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.secondary,
-                  fontSize: 14,
+                  fontSize: width * 0.038,
                 ),
               ),
             ],
@@ -59,7 +60,7 @@ class LastReadCard extends StatelessWidget {
             arabicTitle != null ? arabicTitle : "",
             style: GoogleFonts.scheherazadeNew(
               color: Theme.of(context).colorScheme.primary,
-              fontSize: 20,
+              fontSize: width * 0.055,
               fontWeight: FontWeight.bold,
             ),
           ),

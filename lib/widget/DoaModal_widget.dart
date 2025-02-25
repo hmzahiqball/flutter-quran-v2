@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../provider/settings_provider.dart';
 
 class DoaBottomSheet extends StatelessWidget {
   final String title;
@@ -17,6 +19,8 @@ class DoaBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = Provider.of<SettingsProvider>(context);
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.5, // Setengah layar
       padding: const EdgeInsets.all(16),
@@ -65,7 +69,7 @@ class DoaBottomSheet extends StatelessWidget {
                           arabicText,
                           textAlign: TextAlign.right,
                           style: GoogleFonts.scheherazadeNew(
-                            fontSize: 22,
+                            fontSize: settings.arabicFontSize,
                             fontWeight: FontWeight.bold,
                             color: Theme.of(context).colorScheme.primary,
                           ),
@@ -81,7 +85,7 @@ class DoaBottomSheet extends StatelessWidget {
                   const SizedBox(height: 5),
                   Text(
                     latinText,
-                    style: const TextStyle(fontSize: 16),
+                    style: TextStyle(fontSize: settings.latinFontSize),
                   ),
                   const SizedBox(height: 16),
                   const Text(
@@ -91,7 +95,7 @@ class DoaBottomSheet extends StatelessWidget {
                   const SizedBox(height: 5),
                   Text(
                     translation,
-                    style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                    style: TextStyle(fontSize: settings.translationFontSize, color: Colors.grey[700]),
                   ),
                 ],
               ),
