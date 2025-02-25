@@ -50,31 +50,30 @@ class _HomePageState extends State<HomePage> {
   }
 
   void searchData(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        searchResults.clear();
-      } else {
-        searchResults =
-            surahList
-                .where(
-                  (surah) =>
-                      surah['namaLatin'].toLowerCase().contains(
-                        query.toLowerCase(),
-                      ) ||
-                      surah['arti'].toLowerCase().contains(query.toLowerCase()),
-                )
-                .toList();
+  setState(() {
+    if (query.isEmpty) {
+      searchResults.clear();
+    } else {
+      // Normalisasi query (hapus "-", "'", dan spasi)
+      String normalizedQuery = query.toLowerCase().replaceAll(RegExp(r"[-'\s]"), "");
 
-        searchResults.addAll(
-          doaList
-              .where(
-                (doa) => doa['doa'].toLowerCase().contains(query.toLowerCase()),
-              )
-              .toList(),
-        );
-      }
-    });
-  }
+      searchResults = surahList
+          .where((surah) {
+            String normalizedNama = surah['namaLatin'].toLowerCase().replaceAll(RegExp(r"[-'\s]"), "");
+            String normalizedArti = surah['arti'].toLowerCase().replaceAll(RegExp(r"[-'\s]"), "");
+            return normalizedNama.contains(normalizedQuery) || normalizedArti.contains(normalizedQuery);
+          })
+          .toList();
+
+      searchResults.addAll(
+        doaList.where((doa) {
+          String normalizedDoa = doa['doa'].toLowerCase().replaceAll(RegExp(r"[-'\s]"), "");
+          return normalizedDoa.contains(normalizedQuery);
+        }).toList(),
+      );
+    }
+  });
+}
 
   Future<void> loadSurahData() async {
     String data = await rootBundle.loadString('assets/json/surah.json');
