@@ -89,15 +89,6 @@ class _SurahPageState extends State<SurahPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SurahCard(
-              title: surahData?['namaLatin'] ?? 'Loading...',
-              verse: surahData?['jumlahAyat'].toString() ?? '0',
-              type: surahData?['tempatTurun'] ?? '',
-              arabicTitle: surahData?['nama'] ?? '',
-              arti: surahData?['arti'] ?? '',
-              urutan: surahData?['urut'].toString() ?? 'Tidak diketahui',
-            ),
-            SizedBox(height: 20),
             Expanded(
               child: ListView.builder(
                 itemCount: surahData?['nomor'].toString() != '1'
@@ -111,9 +102,19 @@ class _SurahPageState extends State<SurahPage> {
                         width: 200,
                       ),
                     );
+                  } else if (index == 0) {
+                    return SurahCard(
+                      title: surahData?['namaLatin'] ?? 'Loading...',
+                      verse: surahData?['jumlahAyat'].toString() ?? '0',
+                      type: surahData?['tempatTurun'] ?? '',
+                      arabicTitle: surahData?['nama'] ?? '',
+                      arti: surahData?['arti'] ?? '',
+                      urutan: surahData?['urut'].toString() ?? 'Tidak diketahui',
+                    );
                   } else {
                     var ayat =
-                        surahData?['nomor'].toString() == '1' ? ayatList[index] : ayatList[index - 1];
+                        // surahData?['nomor'].toString() == '1' ? ayatList[index - 1] : ayatList[index - 2];
+                        surahData?['nomor'].toString() == '1' ? ayatList[index - 1] : ayatList[index - 1];
                     return AyatItem(
                       title: surahData?['namaLatin'],
                       arabicTitle: surahData?['nama'],

@@ -25,7 +25,7 @@ class DoaBottomSheet extends StatelessWidget {
       height: MediaQuery.of(context).size.height * 0.5, // Setengah layar
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Color(0xFFF9F9F9),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
@@ -47,7 +47,6 @@ class DoaBottomSheet extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary,
               ),
             ),
           ),
@@ -57,11 +56,6 @@ class DoaBottomSheet extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "Arabic:",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 5),
                   Row(
                     children: [
                       Expanded(
@@ -78,24 +72,18 @@ class DoaBottomSheet extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    "Latin:",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 5),
                   Text(
                     latinText,
-                    style: TextStyle(fontSize: settings.latinFontSize),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    "Terjemahan:",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.baloo2(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontSize: settings.latinFontSize,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 5),
                   Text(
                     translation,
-                    style: TextStyle(fontSize: settings.translationFontSize, color: Colors.grey[700]),
+                    style: TextStyle(fontSize: settings.translationFontSize, color: Theme.of(context).colorScheme.secondary),
                   ),
                 ],
               ),
