@@ -120,7 +120,11 @@ class AyatItem extends StatelessWidget {
             const SizedBox(height: 5),
             Text(
               latin,
-              style: TextStyle(fontSize: settings.latinFontSize, color: Theme.of(context).colorScheme.primary),
+              style: GoogleFonts.baloo2(
+                fontSize: settings.latinFontSize,
+                color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 5),
             Text(

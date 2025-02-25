@@ -34,7 +34,6 @@ class _SurahPageState extends State<SurahPage> {
       surahData = jsonResult['data'];
       ayatList = surahData?['ayat'] ?? [];
     });
-    print(surahData?['nomor']);
   }
 
   void showSettingBottomSheet(BuildContext context) {
