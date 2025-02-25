@@ -34,6 +34,7 @@ class _SurahPageState extends State<SurahPage> {
       surahData = jsonResult['data'];
       ayatList = surahData?['ayat'] ?? [];
     });
+    print(surahData?['nomor']);
   }
 
   void showSettingBottomSheet(BuildContext context) {
@@ -95,7 +96,7 @@ class _SurahPageState extends State<SurahPage> {
               type: surahData?['tempatTurun'] ?? '',
               arabicTitle: surahData?['nama'] ?? '',
               arti: surahData?['arti'] ?? '',
-              nomor: surahData?['urut'].toString() ?? '0',
+              urutan: surahData?['urut'].toString() ?? 'Tidak diketahui',
             ),
             SizedBox(height: 20),
             Expanded(
@@ -127,29 +128,6 @@ class _SurahPageState extends State<SurahPage> {
                 },
               ),
             ),
-            // Expanded(
-            //   child: ListView.builder(
-            //     itemCount: ayatList.length,
-            //     itemBuilder: (context, index) {
-            //       Center(
-            //         child: Image.asset(
-            //           'assets/images/bismillah.png',
-            //           width: 200,
-            //         ),
-            //       );
-            //       var ayat = ayatList[index];
-            //       return AyatItem(
-            //         title: surahData?['namaLatin'],
-            //         arabicTitle: surahData?['nama'],
-            //         type: surahData?['tempatTurun'],
-            //         number: ayat['nomorAyat'],
-            //         arabicText: ayat['teksArab'],
-            //         translation: ayat['teksIndonesia'],
-            //         latin: ayat['teksLatin'],
-            //       );
-            //     },
-            //   ),
-            // ),
           ],
         ),
       ),

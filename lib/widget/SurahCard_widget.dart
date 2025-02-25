@@ -7,7 +7,7 @@ class SurahCard extends StatelessWidget {
   final String type;
   final String arabicTitle;
   final String arti;
-  final String nomor;
+  final String urutan;
 
   const SurahCard({
     required this.title,
@@ -15,9 +15,10 @@ class SurahCard extends StatelessWidget {
     required this.type,
     required this.arabicTitle,
     required this.arti,
-    required this.nomor,
+    required this.urutan,
     Key? key,
   }) : super(key: key);
+
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +76,7 @@ class SurahCard extends StatelessWidget {
               ),
               SizedBox(height: 4),
               Text(
-                "Surah ke-"+nomor,
+                "Surah ke-" + urutan,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.secondary,
                   fontSize: 14,
