@@ -89,15 +89,20 @@ class _SurahPageState extends State<SurahPage> {
               type: surahData?['tempatTurun'] ?? '',
               arabicTitle: surahData?['nama'] ?? '',
               arti: surahData?['arti'] ?? '',
-              nomor: surahData?['nomor'].toString() ?? '0',
+              nomor: surahData?['urut'].toString() ?? '0',
             ),
             SizedBox(height: 20),
             Expanded(
               child: ListView.builder(
-                itemCount: ayatList.length,
+                itemCount: ayatList.length + 1,
                 itemBuilder: (context, index) {
-                  var ayat = ayatList[index];
-                  return AyatItem(
+                  if (surahData?['nomor'].toString() != '1' && index == 0) {
+                    return Center(
+                      child: Image.asset('assets/images/bismillah.png', width: 200),
+                    );
+                  } else {
+                    var ayat = ayatList[index];
+                    return AyatItem(
                     title: surahData?['namaLatin'],
                     arabicTitle: surahData?['nama'],
                     type: surahData?['tempatTurun'],
@@ -106,6 +111,7 @@ class _SurahPageState extends State<SurahPage> {
                     translation: ayat['teksIndonesia'],
                     latin: ayat['teksLatin'],
                   );
+                  }
                 },
               ),
             ),
