@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_quran/widget/SurahCard_widget.dart';
 import 'package:flutter_quran/widget/AyatItem_widget.dart';
 import 'package:flutter_quran/widget/Settings_widget.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class SurahPage extends StatefulWidget {
   const SurahPage({super.key});
@@ -16,11 +18,24 @@ class _SurahPageState extends State<SurahPage> {
   Map<String, dynamic>? surahData;
   List<dynamic> ayatList = [];
   int? surahNumber;
+  int? ayatNumber;
+  final ScrollController _scrollController = ScrollController();
+  final Map<int, GlobalKey> _ayatKeys = {};
+  final ItemScrollController _itemScrollController = ItemScrollController();
+  final _desiredItemIndex = 20;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    surahNumber = ModalRoute.of(context)?.settings.arguments as int?;
+
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is int) {
+      surahNumber = args;
+    } else if (args is Map<String, dynamic>) {
+      surahNumber = args['nomor'] as int?;
+      ayatNumber = args['ayat'] as int?;
+    }
+
     if (surahNumber != null) {
       loadAyatData(surahNumber!);
     }
@@ -34,16 +49,31 @@ class _SurahPageState extends State<SurahPage> {
       surahData = jsonResult['data'];
       ayatList = surahData?['ayat'] ?? [];
     });
+
+    // Tunggu sampai UI siap sebelum menggulir
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && ayatNumber != null) {
+        Future.delayed(Duration(milliseconds: 10), () {
+            if (mounted) {
+                scrollToAyat(ayatNumber! + 1);
+            }
+        });
+      }
+    });
+  }
+
+  void scrollToAyat(int ayatIndex) {
+    _itemScrollController.scrollTo(
+      index: ayatIndex,
+      duration: const Duration(seconds: 1),
+      curve: Curves.easeInOutCubic,
+    );
   }
 
   void showSettingBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      transitionAnimationController: AnimationController(
-        vsync: Navigator.of(context),
-        duration: const Duration(milliseconds: 500), // Durasi transisi
-      ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -86,58 +116,57 @@ class _SurahPageState extends State<SurahPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 10.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: ListView.builder(
-                itemCount: ayatList.length + (surahData?['nomor'].toString() != '1' ? 2 : 1),
-                itemBuilder: (context, index) {
-                  if (index == 0) {
-                    return SurahCard(
-                      title: surahData?['namaLatin'] ?? 'Loading...',
-                      verse: surahData?['jumlahAyat'].toString() ?? '0',
-                      type: surahData?['tempatTurun'] ?? '',
-                      arabicTitle: surahData?['nama'] ?? '',
-                      arti: surahData?['arti'] ?? '',
-                      urutan: surahData?['urut'].toString() ?? 'Tidak diketahui',
-                    );
-                  } 
-                  else if (surahData?['nomor'].toString() != '1' && index == 1) {
-                    return Container(
-                      margin: EdgeInsets.symmetric(vertical: 20),
-                      child: Center(
-                        child: Image.asset(
-                          'assets/images/bismillah.png',
-                          width: 200,
-                        ),
+        child: ScrollablePositionedList.builder(
+          itemScrollController: _itemScrollController,
+          itemCount:
+              ayatList.length + (surahData?['nomor'].toString() != '1' ? 2 : 1),
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              return SurahCard(
+                title: surahData?['namaLatin'] ?? 'Loading...',
+                verse: surahData?['jumlahAyat'].toString() ?? '0',
+                type: surahData?['tempatTurun'] ?? '',
+                arabicTitle: surahData?['nama'] ?? '',
+                arti: surahData?['arti'] ?? '',
+                urutan: surahData?['urut'].toString() ?? 'Tidak diketahui',
+              );
+            } else if (surahData?['nomor'].toString() != '1' && index == 1) {
+              return Column(
+                children: [
+                  Container(
+                    margin: EdgeInsets.symmetric(vertical: 20),
+                    child: Center(
+                      child: Image.asset(
+                        'assets/images/bismillah.png',
+                        width: 200,
                       ),
-                    );
-                  }
+                    ),
+                  ),
+                  Divider(color: Colors.grey.shade300),
+                ],
+              );
+            }
 
-                  // Hitung index dengan benar agar semua ayat muncul
-                  int ayatIndex = (surahData?['nomor'].toString() != '1') ? index - 2 : index - 1;
+            int ayatIndex =
+                (surahData?['nomor'].toString() != '1') ? index - 2 : index - 1;
 
-                  // Pastikan index tidak out of range
-                  if (ayatIndex < ayatList.length) {
-                    var ayat = ayatList[ayatIndex];
-
-                    return AyatItem(
-                      title: surahData?['namaLatin'],
-                      arabicTitle: surahData?['nama'],
-                      type: surahData?['tempatTurun'],
-                      number: ayat['nomorAyat'],
-                      arabicText: ayat['teksArab'],
-                      translation: ayat['teksIndonesia'],
-                      latin: ayat['teksLatin'],
-                    );
-                  }
-
-                  return SizedBox();
-                }
-              ),
-            ),
-          ],
+            if (ayatIndex < ayatList.length) {
+              var ayat = ayatList[ayatIndex];
+              return Container(
+                key: _ayatKeys[ayat['nomorAyat']],
+                child: AyatItem(
+                  title: surahData?['namaLatin'],
+                  arabicTitle: surahData?['nama'],
+                  type: surahData?['tempatTurun'],
+                  number: ayat['nomorAyat'],
+                  arabicText: ayat['teksArab'],
+                  translation: ayat['teksIndonesia'],
+                  latin: ayat['teksLatin'],
+                ),
+              );
+            }
+            return SizedBox();
+          },
         ),
       ),
     );

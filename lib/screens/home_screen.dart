@@ -230,7 +230,7 @@ class _HomePageState extends State<HomePage> {
                 List<String?> lastRead = snapshot.data!;
                 return GestureDetector(
                   onTap: () {
-                    if (lastRead[0] != null) {
+                    if (lastRead[0] != null && lastRead[3] != null){
                       // Cari Surah berdasarkan nama
                       var surahData = surahList.firstWhere(
                         (surah) =>
@@ -243,13 +243,18 @@ class _HomePageState extends State<HomePage> {
                         Navigator.pushNamed(
                           context,
                           '/surah',
-                          arguments: surahData['nomor'],
-                        );
+                          // arguments: surahData['nomor'],
+                          arguments: {
+                            'nomor': surahData['nomor'], // Nomor surah
+                            'ayat': int.parse(lastRead[3]!) // Nomor ayat
+                          },
+                        ).then(
+                          (_) => setState(() {}),
+                        ); 
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text("Surah tidak ditemukan")),
                         );
-                        print("masuk");
                       }
                     }
                   },
