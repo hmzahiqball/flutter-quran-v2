@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter/services.dart' show rootBundle;
 
 class LocationPickerWidget extends StatefulWidget {
   final Function(String) onLocationSelected;
@@ -26,22 +26,14 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
   }
 
   Future<void> fetchCities() async {
-    final response = await http.get(
-      Uri.parse(
-          'https://raw.githubusercontent.com/lakuapik/jadwalsholatorg/master/kota.json'),
-    );
+    final assets = await rootBundle.loadString('assets/json/kota.json');
+    final List<String> citiesJson = json.decode(assets).cast<String>();
 
-    if (response.statusCode == 200) {
-      setState(() {
-        cities = List<String>.from(json.decode(response.body));
-        filteredCities = List.from(cities); // Inisialisasi list yang difilter
-        isLoading = false;
-      });
-    } else {
-      setState(() {
-        isLoading = false;
-      });
-    }
+    setState(() {
+      cities = citiesJson;
+      filteredCities = List.from(cities);
+      isLoading = false;
+    });
   }
 
   void filterSearchResults(String query) {

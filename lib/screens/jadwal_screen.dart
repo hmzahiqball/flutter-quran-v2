@@ -86,7 +86,9 @@ class _JadwalPageState extends State<JadwalPage> {
         }
       }
     } catch (e) {
-      print("Error fetching data: $e");
+      jadwalHariIni = {
+        'Koneksi Internet Tidak Tersedia :(': '-',
+      };
     }
 
     setState(() {
@@ -96,47 +98,69 @@ class _JadwalPageState extends State<JadwalPage> {
   }
 
   void updateKeteranganWaktu() {
-    if (jadwalHariIni == null || jadwalHariIni!.isEmpty) return;
-
-    DateTime now = DateTime.now();
-    List<String> waktuSholat = jadwalHariIni!.values.toList();
-    List<String> namaSholat = jadwalHariIni!.keys.toList();
-
-    for (int i = 0; i < waktuSholat.length; i++) {
-      DateTime waktu = DateFormat("HH:mm").parse(waktuSholat[i]);
-      DateTime waktuSholatDateTime = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        waktu.hour,
-        waktu.minute,
-      );
-
-      if (now.isBefore(waktuSholatDateTime)) {
-        int selisihMenit = waktuSholatDateTime.difference(now).inMinutes;
+    try{
+      if (jadwalHariIni == null || jadwalHariIni!.isEmpty) return;
+  
+      DateTime now = DateTime.now();
+      List<String> waktuSholat = jadwalHariIni!.values.toList();
+      List<String> namaSholat = jadwalHariIni!.keys.toList();
+  
+      for (int i = 0; i < waktuSholat.length; i++) {
+        DateTime waktu = DateFormat("HH:mm").parse(waktuSholat[i]);
+        DateTime waktuSholatDateTime = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          waktu.hour,
+          waktu.minute,
+        );
+  
+        if (now.isBefore(waktuSholatDateTime)) {
+          int selisihMenit = waktuSholatDateTime.difference(now).inMinutes;
+          int selisihJam = selisihMenit ~/ 60;
+          int sisaMenit = selisihMenit % 60;
+  
+          if (waktuSholatDateTime.difference(now).inMinutes <= 30) {
+            keteranganWaktu = "Menjelang Waktu ${namaSholat[i]}";
+          } else {
+            keteranganWaktu =
+                i > 0
+                    ? "Waktu ${namaSholat[i - 1]}"
+                    : "Menunggu Waktu ${namaSholat[i]}";
+          }
+          estimasi =
+              selisihJam > 0
+                  ? "$selisihJam Jam $sisaMenit Menit menuju ${namaSholat[i]}"
+                  : "$selisihMenit Menit menuju ${namaSholat[i]}";
+          return;
+        }
+      }
+  
+      // Jika sekarang sudah melewati semua jadwal sholat
+      if (keteranganWaktu == null) {
+        DateTime waktuTerakhir = DateFormat("HH:mm").parse(waktuSholat.last);
+        DateTime waktuTerakhirDateTime = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          waktuTerakhir.hour,
+          waktuTerakhir.minute,
+        );
+  
+        int selisihMenit = now.difference(waktuTerakhirDateTime).inMinutes;
         int selisihJam = selisihMenit ~/ 60;
         int sisaMenit = selisihMenit % 60;
-
-        if (waktuSholatDateTime.difference(now).inMinutes <= 30) {
-          keteranganWaktu = "Menjelang Waktu ${namaSholat[i]}";
-        } else {
-          keteranganWaktu =
-              i > 0
-                  ? "Waktu ${namaSholat[i - 1]}"
-                  : "Menunggu Waktu ${namaSholat[i]}";
-        }
+  
+        keteranganWaktu = "Waktu ${namaSholat.last}";
         estimasi =
             selisihJam > 0
-                ? "$selisihJam Jam $sisaMenit Menit menuju ${namaSholat[i]}"
-                : "$selisihMenit Menit menuju ${namaSholat[i]}";
-        return;
+                ? "$selisihJam Jam $sisaMenit Menit semenjak ${namaSholat.last}"
+                : "$selisihMenit Menit semenjak ${namaSholat.last}";
       }
     }
-
-    // Jika sekarang sudah melewati semua jadwal sholat
-    if (keteranganWaktu == null) {
-      keteranganWaktu = "Waktu ${namaSholat.last}";
-      estimasi = "";
+    catch(e){
+      keteranganWaktu = "Yahh Butuh Internet :((";
+      estimasi = "-";
     }
   }
 
