@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'SurahNumber.dart';
-import 'SurahDetail_widget.dart';
+import 'SurahNumber_widget.dart';
+import 'SurahDetailModal_widget.dart';
 
 class SuraItem extends StatelessWidget {
   final int number;

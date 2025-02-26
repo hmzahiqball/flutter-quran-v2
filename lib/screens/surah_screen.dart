@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_quran/widget/SurahCard_widget.dart';
-import 'package:flutter_quran/widget/AyatItem_widget.dart';
-import 'package:flutter_quran/widget/Settings_widget.dart';
+import 'package:flutter_quran/widget/AyatList_widget.dart';
+import 'package:flutter_quran/widget/SettingsModal_widget.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class SurahPage extends StatefulWidget {
@@ -19,10 +18,8 @@ class _SurahPageState extends State<SurahPage> {
   List<dynamic> ayatList = [];
   int? surahNumber;
   int? ayatNumber;
-  final ScrollController _scrollController = ScrollController();
   final Map<int, GlobalKey> _ayatKeys = {};
   final ItemScrollController _itemScrollController = ItemScrollController();
-  final _desiredItemIndex = 20;
 
   @override
   void didChangeDependencies() {
@@ -54,9 +51,9 @@ class _SurahPageState extends State<SurahPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && ayatNumber != null) {
         Future.delayed(Duration(milliseconds: 10), () {
-            if (mounted) {
-                scrollToAyat(ayatNumber! + 1);
-            }
+          if (mounted) {
+            scrollToAyat(ayatNumber! + 1);
+          }
         });
       }
     });

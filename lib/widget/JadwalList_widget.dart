@@ -8,6 +8,7 @@ class JadwalItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
     return Container(
       padding: EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
@@ -19,7 +20,7 @@ class JadwalItem extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: width * 0.045,
               fontWeight: FontWeight.bold,
               color: Theme.of(context).colorScheme.primary,
             ),
@@ -27,7 +28,7 @@ class JadwalItem extends StatelessWidget {
           Text(
             time,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: width * 0.045,
               color: Theme.of(context).colorScheme.secondary,
             ),
           ),

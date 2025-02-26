@@ -16,6 +16,7 @@ class JadwalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(16),
@@ -40,7 +41,7 @@ class JadwalCard extends StatelessWidget {
                 keterangan,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.primary,
-                  fontSize: 18,
+                  fontSize: width * 0.05,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -51,7 +52,8 @@ class JadwalCard extends StatelessWidget {
                     estimasi,
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.secondary,
-                      fontSize: 14,
+                      fontSize: width * 0.039,
+                      // fontSize: 14,
                     ),
                   ),
                   Text(' | '),
@@ -62,7 +64,7 @@ class JadwalCard extends StatelessWidget {
                       style: TextStyle(
                         decoration: TextDecoration.underline,
                         color: Theme.of(context).colorScheme.secondary,
-                        fontSize: 14,
+                        fontSize: width * 0.039,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

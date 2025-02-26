@@ -5,10 +5,14 @@ class SettingsProvider extends ChangeNotifier {
   double _arabicFontSize = 22.0;
   double _latinFontSize = 16.0;
   double _translationFontSize = 16.0;
+  String _arabicFontFamily = 'Scheherazade New';
+  FontWeight _arabicFontWeight = FontWeight.bold;
 
   double get arabicFontSize => _arabicFontSize;
   double get latinFontSize => _latinFontSize;
   double get translationFontSize => _translationFontSize;
+  String get arabicFontFamily => _arabicFontFamily;
+  FontWeight get arabicFontWeight => _arabicFontWeight;
 
   SettingsProvider() {
     _loadSettings();
@@ -19,6 +23,9 @@ class SettingsProvider extends ChangeNotifier {
     _arabicFontSize = prefs.getDouble('arabicFontSize') ?? 22.0;
     _latinFontSize = prefs.getDouble('latinFontSize') ?? 16.0;
     _translationFontSize = prefs.getDouble('translationFontSize') ?? 16.0;
+    _arabicFontFamily = prefs.getString('arabicFontFamily') ?? 'Scheherazade New';
+    String weightString = prefs.getString('arabicFontWeight') ?? 'normal';
+    _arabicFontWeight = (weightString == 'bold') ? FontWeight.bold : FontWeight.normal;
     notifyListeners();
   }
 
@@ -26,6 +33,18 @@ class SettingsProvider extends ChangeNotifier {
     _arabicFontSize = value;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('arabicFontSize', value);
+    notifyListeners();
+  }
+
+  void setArabicFontFamily(String font) async {
+    _arabicFontFamily = font;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('arabicFontFamily', font);
+    notifyListeners();
+  }
+
+  void setArabicFontWeight(FontWeight weight) async {
+    _arabicFontWeight = weight;
     notifyListeners();
   }
 

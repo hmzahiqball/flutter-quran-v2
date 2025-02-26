@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_quran/widget/LastReadCard_widget.dart';
 import 'package:flutter_quran/widget/FilterBar_widget.dart';
-import 'package:flutter_quran/widget/SuraItem_widget.dart';
-import 'package:flutter_quran/widget/DoaItem_widget.dart';
+import 'package:flutter_quran/widget/SuraList_widget.dart';
+import 'package:flutter_quran/widget/DoaList_widget.dart';
 import 'package:flutter_quran/widget/DoaModal_widget.dart';
-import 'package:flutter_quran/widget/Settings_widget.dart';
+import 'package:flutter_quran/widget/SettingsModal_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -143,7 +143,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: Color(0xFFF9F9F9),
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.background,
+        backgroundColor: Color(0xFFF9F9F9),
         elevation: 0,
         title:
             isSearching

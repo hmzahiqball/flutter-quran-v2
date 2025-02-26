@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:html_unescape/html_unescape.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:flutter_quran/widget/BookmarkModal_widget.dart';
+import 'package:flutter_quran/widget/LastReadModal_widget.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
@@ -104,17 +104,22 @@ class AyatItem extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    arabicText,
-                    textAlign: TextAlign.right,
-                    style: GoogleFonts.scheherazadeNew(
-                      fontSize: settings.arabicFontSize,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                ),
+                Consumer<SettingsProvider>(
+                  builder: (context, settings, child) {
+                    return Expanded(
+                      child: Text(
+                        arabicText,
+                        textAlign: TextAlign.right,
+                        style: GoogleFonts.getFont(
+                          settings.arabicFontFamily,
+                          fontSize: settings.arabicFontSize,
+                          fontWeight: settings.arabicFontWeight,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    );
+                  },
+                )
               ],
             ),
             const SizedBox(height: 5),

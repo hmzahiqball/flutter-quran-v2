@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widget/SurahNumber.dart';
+import 'SurahNumber_widget.dart';
 
 class DoaItem extends StatelessWidget {
   final int number;

@@ -4,9 +4,9 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_quran/widget/JadwalCard_widget.dart';
-import 'package:flutter_quran/widget/JadwalItem_widget.dart';
-import 'package:flutter_quran/widget/Settings_widget.dart';
-import 'package:flutter_quran/widget/ListKota_widget.dart';
+import 'package:flutter_quran/widget/JadwalList_widget.dart';
+import 'package:flutter_quran/widget/SettingsModal_widget.dart';
+import 'package:flutter_quran/widget/KotaListModal_widget.dart';
 import 'package:hijri/hijri_calendar.dart';
 
 class JadwalPage extends StatefulWidget {
@@ -21,7 +21,7 @@ class _JadwalPageState extends State<JadwalPage> {
   bool isLoading = true;
   String? keteranganWaktu;
   String? estimasi;
-  String lokasi = 'bandung'; // Default lokasi
+  String lokasi = 'acehbarat'; // Default lokasi
   var _format = HijriCalendar.now();
 
   @override
@@ -35,7 +35,7 @@ class _JadwalPageState extends State<JadwalPage> {
     String? savedLocation = prefs.getString('selected_location');
     if (savedLocation != null) {
       setState(() {
-        lokasi = savedLocation;
+        lokasi = savedLocation.replaceAll(' ', '');
       });
     }
     fetchJadwalSholat();
@@ -86,9 +86,7 @@ class _JadwalPageState extends State<JadwalPage> {
         }
       }
     } catch (e) {
-      jadwalHariIni = {
-        'Koneksi Internet Tidak Tersedia :(': '-',
-      };
+      jadwalHariIni = {'Koneksi Internet Tidak Tersedia :(': '-'};
     }
 
     setState(() {
@@ -98,13 +96,13 @@ class _JadwalPageState extends State<JadwalPage> {
   }
 
   void updateKeteranganWaktu() {
-    try{
+    try {
       if (jadwalHariIni == null || jadwalHariIni!.isEmpty) return;
-  
+
       DateTime now = DateTime.now();
       List<String> waktuSholat = jadwalHariIni!.values.toList();
       List<String> namaSholat = jadwalHariIni!.keys.toList();
-  
+
       for (int i = 0; i < waktuSholat.length; i++) {
         DateTime waktu = DateFormat("HH:mm").parse(waktuSholat[i]);
         DateTime waktuSholatDateTime = DateTime(
@@ -114,12 +112,12 @@ class _JadwalPageState extends State<JadwalPage> {
           waktu.hour,
           waktu.minute,
         );
-  
+
         if (now.isBefore(waktuSholatDateTime)) {
           int selisihMenit = waktuSholatDateTime.difference(now).inMinutes;
           int selisihJam = selisihMenit ~/ 60;
           int sisaMenit = selisihMenit % 60;
-  
+
           if (waktuSholatDateTime.difference(now).inMinutes <= 30) {
             keteranganWaktu = "Menjelang Waktu ${namaSholat[i]}";
           } else {
@@ -135,7 +133,7 @@ class _JadwalPageState extends State<JadwalPage> {
           return;
         }
       }
-  
+
       // Jika sekarang sudah melewati semua jadwal sholat
       if (keteranganWaktu == null) {
         DateTime waktuTerakhir = DateFormat("HH:mm").parse(waktuSholat.last);
@@ -146,19 +144,18 @@ class _JadwalPageState extends State<JadwalPage> {
           waktuTerakhir.hour,
           waktuTerakhir.minute,
         );
-  
+
         int selisihMenit = now.difference(waktuTerakhirDateTime).inMinutes;
         int selisihJam = selisihMenit ~/ 60;
         int sisaMenit = selisihMenit % 60;
-  
+
         keteranganWaktu = "Waktu ${namaSholat.last}";
         estimasi =
             selisihJam > 0
                 ? "$selisihJam Jam $sisaMenit Menit semenjak ${namaSholat.last}"
                 : "$selisihMenit Menit semenjak ${namaSholat.last}";
       }
-    }
-    catch(e){
+    } catch (e) {
       keteranganWaktu = "Yahh Butuh Internet :((";
       estimasi = "-";
     }
@@ -199,6 +196,7 @@ class _JadwalPageState extends State<JadwalPage> {
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.background,
@@ -236,14 +234,14 @@ class _JadwalPageState extends State<JadwalPage> {
                 Text(
                   '${_format.toFormat("dd MMMM yyyy")}',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: width * 0.044,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
                 Text(
                   DateFormat('dd MMMM yyyy').format(DateTime.now()),
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: width * 0.044,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
