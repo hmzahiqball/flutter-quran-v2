@@ -49,7 +49,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   Widget build(BuildContext context) {
     final settings = Provider.of<SettingsProvider>(context);
     return Container(
-      height: MediaQuery.of(context).size.height * 0.5,
+      height: MediaQuery.of(context).size.height * 0.6,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -199,6 +199,28 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                   });
                   _saveSettings();
                 },
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          // Keterangan Copyright
+          Column(
+            children: [
+              Text(
+                "Thanks For Using This App ❤️",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[600],
+                ),
+              ),
+              Text(
+                "Made By Putra Suyapratama",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[600],
+                ),
               ),
             ],
           ),
