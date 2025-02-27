@@ -46,6 +46,8 @@ dependencies:
   provider: ^6.1.2
   azlistview: ^2.0.0
   scrollable_positioned_list: ^0.2.3
+  permission_handler: ^11.4.0
+
 
 dev_dependencies:
   flutter_test:
@@ -74,6 +76,7 @@ flutter:
     - assets/images/logoText.png
     - assets/images/bismillah.png
     - assets/images/ayatNumber.png
+    - assets/images/kaaba.png
     - assets/json/kota.json
     - assets/json/surah.json
     - assets/json/doa.json

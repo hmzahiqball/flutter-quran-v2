@@ -7,6 +7,7 @@ import 'package:flutter_quran/widget/JadwalCard_widget.dart';
 import 'package:flutter_quran/widget/JadwalList_widget.dart';
 import 'package:flutter_quran/widget/SettingsModal_widget.dart';
 import 'package:flutter_quran/widget/KotaListModal_widget.dart';
+import 'package:flutter_quran/widget/KiblahModal_widget.dart';
 import 'package:hijri/hijri_calendar.dart';
 
 class JadwalPage extends StatefulWidget {
@@ -218,7 +219,10 @@ class _JadwalPageState extends State<JadwalPage> {
               color: Theme.of(context).colorScheme.primary,
             ),
             onPressed: () {
-              Navigator.of(context).pushNamed('/qiblah');
+              showModalBottomSheet(
+                context: context,
+                builder: (context) => const QiblahCompassWidget(),
+              );
             },
           ),
         ],
