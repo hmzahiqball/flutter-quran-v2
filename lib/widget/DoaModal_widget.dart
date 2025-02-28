@@ -62,7 +62,8 @@ class DoaBottomSheet extends StatelessWidget {
                         child: Text(
                           arabicText,
                           textAlign: TextAlign.right,
-                          style: GoogleFonts.scheherazadeNew(
+                          style: GoogleFonts.getFont(
+                            settings.arabicFontFamily,
                             fontSize: settings.arabicFontSize,
                             fontWeight: FontWeight.bold,
                             color: Theme.of(context).colorScheme.primary,

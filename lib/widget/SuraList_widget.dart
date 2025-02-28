@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'SurahNumber_widget.dart';
 import 'SurahDetailModal_widget.dart';
+import 'package:provider/provider.dart';
+import '../provider/settings_provider.dart';
 
 class SuraItem extends StatelessWidget {
   final int number;
@@ -42,6 +44,7 @@ class SuraItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = Provider.of<SettingsProvider>(context);
     double width = MediaQuery.of(context).size.width;
     return Container(
       padding: EdgeInsets.symmetric(vertical: 8),
@@ -70,11 +73,11 @@ class SuraItem extends StatelessWidget {
             children: [
               Text(
                 arabicTitle,
-                style: GoogleFonts.scheherazadeNew(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontSize: width * 0.055,
-                  // fontSize: 20,
+                style: GoogleFonts.getFont(
+                  settings.arabicFontFamily,
+                  fontSize: width * 0.057,
                   fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
               IconButton(

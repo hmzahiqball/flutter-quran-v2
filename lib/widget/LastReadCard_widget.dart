@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../provider/settings_provider.dart';
 
 class LastReadCard extends StatelessWidget {
   final String title;
@@ -17,6 +19,7 @@ class LastReadCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = Provider.of<SettingsProvider>(context);
     double width = MediaQuery.of(context).size.width;
     return Container(
       width: double.infinity,
@@ -58,10 +61,11 @@ class LastReadCard extends StatelessWidget {
           ),
           Text(
             arabicTitle != null ? arabicTitle : "",
-            style: GoogleFonts.scheherazadeNew(
-              color: Theme.of(context).colorScheme.primary,
-              fontSize: width * 0.055,
+            style: GoogleFonts.getFont(
+              settings.arabicFontFamily,
+              fontSize: width * 0.057,
               fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
         ],
