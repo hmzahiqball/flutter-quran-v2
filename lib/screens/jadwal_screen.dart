@@ -22,7 +22,8 @@ class _JadwalPageState extends State<JadwalPage> {
   bool isLoading = true;
   String? keteranganWaktu;
   String? estimasi;
-  String lokasi = 'acehbarat'; // Default lokasi
+  String lokasiUrl = 'bandung';  // Nama kota untuk URL (tanpa spasi)
+  String lokasiAsli = 'Bandung'; // lokasiasli adalah lokasiurl 
   var _format = HijriCalendar.now();
 
   @override
@@ -36,7 +37,8 @@ class _JadwalPageState extends State<JadwalPage> {
     String? savedLocation = prefs.getString('selected_location');
     if (savedLocation != null) {
       setState(() {
-        lokasi = savedLocation.replaceAll(' ', '');
+        lokasiAsli = savedLocation; // Gunakan untuk tampilan
+        lokasiUrl = savedLocation.replaceAll(' ', '').toLowerCase(); // Gunakan untuk URL
       });
     }
     fetchJadwalSholat();
@@ -48,8 +50,8 @@ class _JadwalPageState extends State<JadwalPage> {
     String bulan = DateFormat('MM').format(DateTime.now());
     String tanggalHariIni = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
-    String? cachedData = prefs.getString('jadwal_sholat_$lokasi');
-    String? cachedDate = prefs.getString('tanggal_sholat_$lokasi');
+    String? cachedData = prefs.getString('jadwal_sholat_$lokasiUrl');
+    String? cachedDate = prefs.getString('tanggal_sholat_$lokasiUrl');
 
     if (cachedData != null && cachedDate == tanggalHariIni) {
       setState(() {
@@ -61,7 +63,7 @@ class _JadwalPageState extends State<JadwalPage> {
     }
 
     String url =
-        'https://raw.githubusercontent.com/lakuapik/jadwalsholatorg/master/adzan/$lokasi/$tahun/$bulan.json';
+        'https://raw.githubusercontent.com/lakuapik/jadwalsholatorg/master/adzan/$lokasiUrl/$tahun/$bulan.json';
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
@@ -82,8 +84,8 @@ class _JadwalPageState extends State<JadwalPage> {
             'Maghrib': jadwal['magrib'],
             'Isya': jadwal['isya'],
           };
-          prefs.setString('jadwal_sholat_$lokasi', json.encode(jadwalHariIni));
-          prefs.setString('tanggal_sholat_$lokasi', tanggalHariIni);
+          prefs.setString('jadwal_sholat_$lokasiUrl', json.encode(jadwalHariIni));
+          prefs.setString('tanggal_sholat_$lokasiUrl', tanggalHariIni);
         }
       }
     } catch (e) {
@@ -186,7 +188,8 @@ class _JadwalPageState extends State<JadwalPage> {
         return LocationPickerWidget(
           onLocationSelected: (selectedLocation) {
             setState(() {
-              lokasi = selectedLocation;
+              lokasiAsli = selectedLocation; // Tetap dalam format aslinya
+              lokasiUrl = selectedLocation.replaceAll(' ', '').toLowerCase(); // Format untuk URL
             });
             fetchJadwalSholat();
           },
@@ -200,7 +203,7 @@ class _JadwalPageState extends State<JadwalPage> {
     double width = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.background,
+        backgroundColor: Color(0xFFF9F9F9),
         elevation: 0,
         title: Padding(
           padding: const EdgeInsets.only(left: 10.0),
@@ -255,7 +258,7 @@ class _JadwalPageState extends State<JadwalPage> {
             JadwalCard(
               keterangan: keteranganWaktu ?? "Loading...",
               estimasi: estimasi ?? "-",
-              lokasi: lokasi,
+              lokasi: lokasiAsli,
               onTapLocation: () => showLocationPicker(context),
             ),
             SizedBox(height: 15),

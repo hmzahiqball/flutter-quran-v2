@@ -31,45 +31,45 @@ class JadwalCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          // Keterangan
+          Text(
+            keterangan,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+                    fontSize: width * 0.05,
+              fontWeight: FontWeight.bold,
+            ),
+            maxLines: 2, // Bisa diubah sesuai kebutuhan
+            overflow: TextOverflow.ellipsis, // Tambahkan "..." jika teks terlalu panjang
+          ),
+          SizedBox(height: 4),
+
+          // Estimasi & Lokasi dalam satu baris
+          Wrap(
+            spacing: 4, // Jarak antar elemen dalam Wrap
             children: [
               Text(
-                keterangan,
+                estimasi,
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontSize: width * 0.05,
-                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.secondary,
+                    fontSize: width * 0.04,
                 ),
               ),
-              SizedBox(height: 4),
-              Row(
-                children: [
-                  Text(
-                    estimasi,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.secondary,
-                      fontSize: width * 0.039,
-                      // fontSize: 14,
-                    ),
+              Text('|'),
+              GestureDetector(
+                onTap: onTapLocation,
+                child: Text(
+                  lokasi,
+                  style: TextStyle(
+                    decoration: TextDecoration.underline,
+                    color: Theme.of(context).colorScheme.secondary,
+                    fontSize: width * 0.04,
+                    fontWeight: FontWeight.bold,
                   ),
-                  Text(' | '),
-                  GestureDetector(
-                    onTap: onTapLocation, // Memanggil fungsi ketika lokasi diklik
-                    child: Text(
-                      lokasi,
-                      style: TextStyle(
-                        decoration: TextDecoration.underline,
-                        color: Theme.of(context).colorScheme.secondary,
-                        fontSize: width * 0.039,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ],
           ),

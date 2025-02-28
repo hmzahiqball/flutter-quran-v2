@@ -85,7 +85,7 @@ class _SurahPageState extends State<SurahPage> {
     return Scaffold(
       backgroundColor: Color(0xFFF9F9F9),
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.background,
+        backgroundColor: Color(0xFFF9F9F9),
         elevation: 0,
         leading: IconButton(
           icon: Icon(
