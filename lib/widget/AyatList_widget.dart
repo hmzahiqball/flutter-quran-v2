@@ -1,20 +1,83 @@
+// Import semua package yang diperlukan di awal
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:html_unescape/html_unescape.dart';
 import 'package:flutter_quran/widget/LastReadModal_widget.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
 import '../provider/settings_provider.dart';
 import 'TafsirModal_widget.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:convert';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:collection/collection.dart';
+import 'package:dio/dio.dart' as dio_package;
+import 'dart:async'; // Untuk StreamController
 
-class AyatItem extends StatelessWidget {
+// Class CancelToken dibuat sendiri
+class CancelToken {
+  bool isCancelled = false;
+
+  void cancel() {
+    isCancelled = true;
+  }
+}
+
+// AudioController singleton untuk mengelola status audio antar widget AyatItem
+class AudioController {
+  static final AudioController _instance = AudioController._internal();
+
+  factory AudioController() {
+    return _instance;
+  }
+
+  AudioController._internal();
+
+  final Map<String, _AyatItemState> _ayatItems =
+      {}; // key: "${surahNumber}_${ayatNumber}"
+  _AyatItemState? _activePlayer;
+
+  // Stream untuk menerima event perubahan status player
+  final StreamController<bool> _playerStatusController =
+      StreamController<bool>.broadcast();
+  Stream<bool> get onPlayerStatusChanged => _playerStatusController.stream;
+
+  void registerAyatItem(_AyatItemState ayatItem) {
+    final key = "${ayatItem.widget.surahNumber}_${ayatItem.widget.number}";
+    _ayatItems[key] = ayatItem;
+  }
+
+  void unregisterAyatItem(_AyatItemState ayatItem) {
+    final key = "${ayatItem.widget.surahNumber}_${ayatItem.widget.number}";
+    _ayatItems.remove(key);
+
+    if (_activePlayer == ayatItem) {
+      _activePlayer = null;
+      _playerStatusController.add(false);
+    }
+  }
+
+  void setActivePlayer(_AyatItemState player) {
+    // Hentikan player yang aktif sebelumnya jika ada dan berbeda
+    if (_activePlayer != null && _activePlayer != player) {
+      _activePlayer!.stopAudio();
+    }
+    _activePlayer = player;
+    _playerStatusController.add(true);
+  }
+
+  _AyatItemState? findAyatItem(int surahNumber, int ayatNumber) {
+    final key = "${surahNumber}_${ayatNumber}";
+    return _ayatItems[key];
+  }
+
+  void dispose() {
+    _playerStatusController.close();
+  }
+}
+
+class AyatItem extends StatefulWidget {
   final int surahNumber;
   final String title;
   final String arabicTitle;
@@ -23,13 +86,71 @@ class AyatItem extends StatelessWidget {
   final String arabicText;
   final String translation;
   final String latin;
+
+  AyatItem({
+    required this.surahNumber,
+    required this.title,
+    required this.arabicTitle,
+    required this.type,
+    required this.number,
+    required this.arabicText,
+    required this.translation,
+    required this.latin,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  State<AyatItem> createState() => _AyatItemState();
+}
+
+class _AyatItemState extends State<AyatItem> {
   final AudioPlayer _audioPlayer = AudioPlayer();
+  bool isPlaying = false;
+  String? currentQariId;
+  int? currentAyatNumber;
+  StreamSubscription? _playerStateSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Mendengarkan perubahan status player
+    _playerStateSubscription = _audioPlayer.onPlayerStateChanged.listen((
+      state,
+    ) {
+      if (state == PlayerState.completed) {
+        setState(() {
+          isPlaying = false;
+        });
+        // Secara opsional, lanjutkan ke ayat berikutnya
+        if (currentQariId != null && currentAyatNumber == widget.number) {
+          _playNextAyat();
+        }
+      } else if (state == PlayerState.playing) {
+        setState(() {
+          isPlaying = true;
+          currentAyatNumber = widget.number;
+        });
+      } else if (state == PlayerState.paused || state == PlayerState.stopped) {
+        setState(() {
+          isPlaying = false;
+        });
+      }
+    });
+
+    // Mendaftarkan widget ini ke AudioController singleton
+    AudioController().registerAyatItem(this);
+  }
+
+  @override
+  void dispose() {
+    _playerStateSubscription?.cancel();
+    AudioController().unregisterAyatItem(this);
+    super.dispose();
+  }
 
   String convertToArabicNumeral(int number) {
-    // Peta angka Latin (0-9) ke angka Arabic-Indic
     const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-
-    // Ubah setiap digit angka menjadi angka Arab
     return number
         .toString()
         .split('')
@@ -50,13 +171,17 @@ class AyatItem extends StatelessWidget {
     await prefs.setInt('lastReadAyat', ayat);
   }
 
-  Future<bool> checkAudioExists(String fileName) async {
+  Future<String> getAudioFilePath(String fileName) async {
     final dir = await getApplicationDocumentsDirectory();
     final audioDir = Directory('${dir.path}/audio');
     if (!await audioDir.exists()) {
       await audioDir.create();
     }
-    final filePath = '${audioDir.path}/$fileName';
+    return '${audioDir.path}/$fileName';
+  }
+
+  Future<bool> checkAudioExists(String fileName) async {
+    final filePath = await getAudioFilePath(fileName);
     return File(filePath).exists();
   }
 
@@ -65,98 +190,76 @@ class AyatItem extends StatelessWidget {
     String audioUrl,
     String fileName,
   ) async {
-    final dir = await getApplicationDocumentsDirectory();
-    final audioDir = Directory('${dir.path}/audio');
-    if (!await audioDir.exists()) {
-      await audioDir.create();
-    }
-    final filePath = '${audioDir.path}/$fileName';
+    final filePath = await getAudioFilePath(fileName);
 
-    double progress = 0.0;
-    bool isDownloading = true;
-
-    // Tampilkan dialog progres
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: Text("Mengunduh Audio"),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text("Sedang mengunduh..."),
-                  SizedBox(height: 10),
-                  LinearProgressIndicator(value: progress),
-                  SizedBox(height: 10),
-                  Text("${(progress * 100).toStringAsFixed(1)}%"),
-                ],
-              ),
-              actions: [
-                if (isDownloading)
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      isDownloading = false;
-                    },
-                    child: Text("Batal"),
-                  ),
-              ],
-            );
-          },
-        );
-      },
-    );
+    // Gunakan library dio
+    final dioInstance = dio_package.Dio();
+    final dioCancelToken = dio_package.CancelToken();
 
     try {
-      var request = http.Request('GET', Uri.parse(audioUrl));
-      var response = await http.Client().send(request);
-
-      if (response.statusCode == 200) {
-        File file = File(filePath);
-        var sink = file.openWrite();
-        int downloaded = 0;
-        int total = response.contentLength ?? 0;
-
-        await for (var chunk in response.stream) {
-          if (!isDownloading) {
-            sink.close();
-            file.delete();
-            return;
-          }
-
-          downloaded += chunk.length;
-          sink.add(chunk);
-
-          // Update progress bar
-          progress = total > 0 ? downloaded / total : 0;
-          (context as Element).markNeedsBuild(); // Pastikan UI terupdate
-        }
-
-        await sink.close();
-
-        if (isDownloading) {
-          Navigator.pop(context); // Tutup dialog progres
-
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text("Unduhan selesai")));
-
-          _audioPlayer.play(DeviceFileSource(filePath));
-        }
-      } else {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Gagal mengunduh audio")));
+      // Cek apakah file sudah ada, jika ada hapus
+      if (await File(filePath).exists()) {
+        // await File(filePath).delete();
+        await _audioPlayer.play(DeviceFileSource(filePath));
+        return; // Keluar dari fungsi setelah memutar audio
       }
-    } catch (e) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error: $e")));
+
+      // Mulai download audio
+      await dioInstance.download(
+        audioUrl,
+        filePath,
+        cancelToken: dioCancelToken,
+      );
+
+      // Setelah download selesai, tampilkan snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Unduhan selesai", style: TextStyle(color: Colors.white)),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+        ),
+      );
+
+      // Set qari yang sedang diputar
+      setState(() {
+        currentQariId = fileName.split('_').last.split('.').first;
+        currentAyatNumber = widget.number;
+      });
+    } on Exception catch (e) {
+      if (context.mounted) {
+        // Jika terjadi error, hapus file jika ada
+        if (await File(filePath).exists()) {
+          await File(filePath).delete();
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error: Tidak Dapat Mendapatkan Audio", style: TextStyle(color: Colors.white)),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+        );
+        // Download ulang setelah error
+        await downloadAudio(context, audioUrl, fileName);
+      }
+    }
+    try{
+      // Beritahu AudioController bahwa player ini aktif
+      AudioController().setActivePlayer(this);
+      // Putar audio
+      await _audioPlayer.play(DeviceFileSource(filePath));
+    } on Exception catch (e) {
+      if (context.mounted) {
+        // Jika terjadi error, hapus file jika ada
+        if (await File(filePath).exists()) {
+          await File(filePath).delete();
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error: Tidak Dapat Mendapatkan Audio", style: TextStyle(color: Colors.white)),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+        );
+        // Download ulang setelah error
+        await downloadAudio(context, audioUrl, fileName);
+      }
     }
   }
 
@@ -188,46 +291,127 @@ class AyatItem extends StatelessWidget {
     );
   }
 
-  void onQariSelected(
-    BuildContext context,
-    String qariId,
-    int surahNumber,
-    int ayatNumber,
-  ) async {
-    try {
-      String jsonString = await rootBundle.loadString(
-        'assets/json/surah/$surahNumber.json',
-      );
-      Map<String, dynamic> surahData = json.decode(jsonString);
-      List<dynamic> ayatList = surahData['data']['ayat'];
-      var ayatData = ayatList.firstWhereOrNull(
-        (ayat) => ayat['nomorAyat'] == ayatNumber,
-      );
-      if (ayatData == null) {
-        print("Ayat tidak ditemukan dalam JSON.");
-        return;
-      }
+  Future<void> playAudio(String qariId, {bool autoPlay = true}) async {
+    setState(() {
+      currentQariId = qariId;
+    });
 
-      if (ayatData != null) {
-        String? audioUrl = ayatData['audio'][qariId];
-        if (audioUrl != null) {
-          String fileName = "${surahNumber}_${ayatNumber}_$qariId.mp3";
-          bool exists = await checkAudioExists(fileName);
-          if (!exists) {
-            showDownloadDialog(context, audioUrl, fileName);
-          } else {
-            final dir = await getApplicationDocumentsDirectory();
-            _audioPlayer.play(DeviceFileSource('${dir.path}/$fileName'));
+    final fileName = "${widget.surahNumber}_${widget.number}_$qariId.mp3";
+    final filePath = await getAudioFilePath(fileName);
+
+    bool exists = await checkAudioExists(fileName);
+    if (!exists) {
+      try {
+        String jsonString = await rootBundle.loadString(
+          'assets/json/surah/${widget.surahNumber}.json',
+        );
+        Map<String, dynamic> surahData = json.decode(jsonString);
+        List<dynamic> ayatList = surahData['data']['ayat'];
+        var ayatData = ayatList.firstWhereOrNull(
+          (ayat) => ayat['nomorAyat'] == widget.number,
+        );
+
+        if (ayatData != null) {
+          String? audioUrl = ayatData['audio'][qariId];
+          if (audioUrl != null) {
+            if (autoPlay) {
+              showDownloadDialog(context, audioUrl, fileName);
+            } else {
+              return;
+            }
           }
-        } else {
-          print("Qari ID tidak ditemukan untuk ayat ini.");
         }
-      } else {
-        print("Ayat tidak ditemukan dalam JSON.");
+      } catch (e) {
+        print("Error saat membaca JSON: $e");
       }
-    } catch (e) {
-      print("Error saat membaca JSON: $e");
+    } else {
+      // Set active ayat
+      AudioController().setActivePlayer(this);
+
+      setState(() {
+        currentAyatNumber = widget.number;
+        isPlaying = true;
+      });
+
+      await _audioPlayer.play(DeviceFileSource(filePath));
     }
+  }
+
+  Future<void> pauseAudio() async {
+    await _audioPlayer.pause();
+    setState(() {
+      isPlaying = false;
+    });
+  }
+
+  Future<void> resumeAudio() async {
+    await _audioPlayer.resume();
+    setState(() {
+      isPlaying = true;
+    });
+  }
+
+  Future<void> stopAudio() async {
+    await _audioPlayer.stop();
+    setState(() {
+      isPlaying = false;
+    });
+  }
+
+  Future<void> _playPreviousAyat() async {
+    if (currentQariId == null) return;
+
+    int prevAyat = widget.number - 1;
+    if (prevAyat < 1) return; // Jika sudah ayat pertama
+
+    // Cari dan play audio
+    _AyatItemState? prevAyatItem = AudioController().findAyatItem(
+      widget.surahNumber,
+      prevAyat,
+    );
+    if (prevAyatItem != null) {
+      await stopAudio();
+      prevAyatItem.playAudio(currentQariId!);
+    }
+  }
+
+  Future<void> _playNextAyat() async {
+    if (currentQariId == null) return;
+
+    int nextAyat = widget.number + 1;
+
+    // Cari dan play audio
+    _AyatItemState? nextAyatItem = AudioController().findAyatItem(
+      widget.surahNumber,
+      nextAyat,
+    );
+    if (nextAyatItem != null) {
+    // Download audio untuk ayat berikutnya tanpa progress
+    String fileName = "${nextAyatItem.widget.surahNumber}_${nextAyatItem.widget.number}_$currentQariId.mp3";
+    String audioUrl = ""; // Ambil URL audio dari data yang sesuai
+
+    // Ambil URL audio dari JSON atau sumber lain
+    String jsonString = await rootBundle.loadString(
+      'assets/json/surah/${nextAyatItem.widget.surahNumber}.json',
+    );
+    Map<String, dynamic> surahData = json.decode(jsonString);
+    List<dynamic> ayatList = surahData['data']['ayat'];
+    var ayatData = ayatList.firstWhereOrNull(
+      (ayat) => ayat['nomorAyat'] == nextAyatItem.widget.number,
+    );
+
+    if (ayatData != null) {
+      audioUrl = ayatData['audio'][currentQariId];
+    }
+
+    // Download audio untuk ayat berikutnya tanpa progress
+    await downloadAudio(context, audioUrl, fileName);
+    nextAyatItem.playAudio(currentQariId!);
+    }
+  }
+
+  void onQariSelected(BuildContext context, String qariId) async {
+    await playAudio(qariId);
   }
 
   void showAyatBottomSheet(BuildContext context, int number) {
@@ -236,35 +420,37 @@ class AyatItem extends StatelessWidget {
       isScrollControlled: true,
       transitionAnimationController: AnimationController(
         vsync: Navigator.of(context),
-        duration: const Duration(milliseconds: 500), // Durasi transisi
+        duration: const Duration(milliseconds: 500),
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         return BookmarkModalWidget(
-          title: title,
+          title: widget.title,
           ayat: number.toString(),
           onSave: () async {
             try {
-              await saveLastRead(title, arabicTitle, type, number);
-              Navigator.pop(context); // Tutup modal setelah berhasil menyimpan
+              await saveLastRead(
+                widget.title,
+                widget.arabicTitle,
+                widget.type,
+                number,
+              );
+              Navigator.pop(context);
             } catch (e) {
-              print("Error menyimpan terakhir baca: $e");
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text("Gagal menyimpan terakhir baca")),
               );
             }
           },
           onPlayAudio: () {
-            // Tambahkan logika untuk memutar audio di sini
             showQariSelectionModal(context, (selectedQariId) {
-              onQariSelected(context, selectedQariId, surahNumber, number);
+              onQariSelected(context, selectedQariId);
             });
           },
           onShowTafsir: () {
-            // Tambahkan logika untuk menampilkan tafsir di sini
-            showTafsirModal(context, surahNumber, number, title);
+            showTafsirModal(context, widget.surahNumber, number, widget.title);
           },
         );
       },
@@ -348,28 +534,12 @@ class AyatItem extends StatelessWidget {
     );
   }
 
-  AyatItem({
-    required this.surahNumber,
-    required this.title,
-    required this.arabicTitle,
-    required this.type,
-    required this.number,
-    required this.arabicText,
-    required this.translation,
-    required this.latin,
-    Key? key,
-  }) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     final settings = Provider.of<SettingsProvider>(context);
 
     return GestureDetector(
-      onTap:
-          () => showAyatBottomSheet(
-            context,
-            number,
-          ), // Tampilkan modal saat dihold
+      onTap: () => showAyatBottomSheet(context, widget.number),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10.0),
         child: Column(
@@ -386,7 +556,7 @@ class AyatItem extends StatelessWidget {
                       height: 40,
                     ),
                     Text(
-                      convertToArabicNumeral(number),
+                      convertToArabicNumeral(widget.number),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -400,7 +570,7 @@ class AyatItem extends StatelessWidget {
                   builder: (context, settings, child) {
                     return Expanded(
                       child: Text(
-                        arabicText,
+                        widget.arabicText,
                         textAlign: TextAlign.right,
                         style: GoogleFonts.getFont(
                           settings.arabicFontFamily,
@@ -416,7 +586,7 @@ class AyatItem extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             Text(
-              latin,
+              widget.latin,
               style: GoogleFonts.baloo2(
                 fontSize: settings.latinFontSize,
                 color: Theme.of(context).colorScheme.primary,
@@ -425,7 +595,7 @@ class AyatItem extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             Text(
-              translation,
+              widget.translation,
               style: TextStyle(
                 fontSize: settings.translationFontSize,
                 color: Theme.of(context).colorScheme.secondary,
@@ -433,6 +603,117 @@ class AyatItem extends StatelessWidget {
             ),
             Divider(color: Colors.grey.shade300),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// Widget AudioFloatingController untuk tombol kontrol audio melayang
+class AudioFloatingController extends StatefulWidget {
+  @override
+  _AudioFloatingControllerState createState() =>
+      _AudioFloatingControllerState();
+}
+
+class _AudioFloatingControllerState extends State<AudioFloatingController> {
+  bool isVisible = false;
+  StreamSubscription? _playerStatusSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Dengarkan perubahan status player
+    _playerStatusSubscription = AudioController().onPlayerStatusChanged.listen((
+      active,
+    ) {
+      setState(() {
+        isVisible = active;
+      });
+    });
+
+    // Cek status awal
+    isVisible = AudioController()._activePlayer != null;
+  }
+
+  @override
+  void dispose() {
+    _playerStatusSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isVisible) return SizedBox.shrink();
+
+    return Positioned(
+      bottom: 30,
+      right: 20,
+      child: Card(
+        elevation: 8,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: Icon(Icons.skip_previous),
+                onPressed: () {
+                  final player = AudioController()._activePlayer;
+                  if (player != null) {
+                    player._playPreviousAyat();
+                  }
+                },
+              ),
+              StreamBuilder<PlayerState>(
+                stream:
+                    AudioController()
+                        ._activePlayer
+                        ?._audioPlayer
+                        .onPlayerStateChanged,
+                initialData: PlayerState.stopped,
+                builder: (context, snapshot) {
+                  final isPlaying = snapshot.data == PlayerState.playing;
+                  return IconButton(
+                    icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
+                    onPressed: () {
+                      final player = AudioController()._activePlayer;
+                      if (player != null) {
+                        if (isPlaying) {
+                          player.pauseAudio();
+                        } else {
+                          player.resumeAudio();
+                        }
+                      }
+                    },
+                  );
+                },
+              ),
+              IconButton(
+                icon: Icon(Icons.skip_next),
+                onPressed: () {
+                  final player = AudioController()._activePlayer;
+                  if (player != null) {
+                    player._playNextAyat();
+                  }
+                },
+              ),
+              IconButton(
+                icon: Icon(Icons.close),
+                onPressed: () {
+                  final player = AudioController()._activePlayer;
+                  if (player != null) {
+                    player.pauseAudio();
+                    setState(() {
+                      isVisible = false;
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
