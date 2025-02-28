@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:html_unescape/html_unescape.dart';
-import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_quran/widget/LastReadModal_widget.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import '../provider/settings_provider.dart';
+import 'TafsirModal_widget.dart';
 
 class AyatItem extends StatelessWidget {
+  final int surahNumber;
   final String title;
   final String arabicTitle;
   final String type;
@@ -26,10 +27,19 @@ class AyatItem extends StatelessWidget {
     const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
 
     // Ubah setiap digit angka menjadi angka Arab
-    return number.toString().split('').map((digit) => arabicNumerals[int.parse(digit)]).join('');
+    return number
+        .toString()
+        .split('')
+        .map((digit) => arabicNumerals[int.parse(digit)])
+        .join('');
   }
 
-  Future<void> saveLastRead(String surah, String arabicSurah, String type, int ayat) async {
+  Future<void> saveLastRead(
+    String surah,
+    String arabicSurah,
+    String type,
+    int ayat,
+  ) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('lastReadSurah', surah);
     await prefs.setString('lastReadSurahArabic', arabicSurah);
@@ -37,7 +47,7 @@ class AyatItem extends StatelessWidget {
     await prefs.setInt('lastReadAyat', ayat);
   }
 
-  void showDoaBottomSheet(BuildContext context, int number) {
+  void showAyatBottomSheet(BuildContext context, int number) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -52,16 +62,47 @@ class AyatItem extends StatelessWidget {
         return BookmarkModalWidget(
           title: title,
           ayat: number.toString(),
-            onSave: () async {
-            await saveLastRead(title, arabicTitle, type, number);
-            Navigator.pop(context); // Tutup modal setelah menyimpan
+          onSave: () async {
+            try {
+              await saveLastRead(title, arabicTitle, type, number);
+              Navigator.pop(context); // Tutup modal setelah berhasil menyimpan
+            } catch (e) {
+              print("Error menyimpan terakhir baca: $e");
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Gagal menyimpan terakhir baca")),
+              );
+            }
+          },
+          onPlayAudio: () {
+            // Tambahkan logika untuk memutar audio di sini
+            print("Memutar audio untuk $title ayat $number");
+          },
+          onShowTafsir: () {
+            // Tambahkan logika untuk menampilkan tafsir di sini
+            showTafsirModal(context, surahNumber, number, title);
           },
         );
       },
     );
   }
 
+  void showTafsirModal(BuildContext context, int surahNumber, int ayahNumber, String title) {
+      showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => ModalTafsir(
+        surahNumber: surahNumber,
+        ayahNumber: ayahNumber,
+        title: title,
+      ),
+    );
+  }
+
   const AyatItem({
+    required this.surahNumber,
     required this.title,
     required this.arabicTitle,
     required this.type,
@@ -75,9 +116,13 @@ class AyatItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = Provider.of<SettingsProvider>(context);
-    
+
     return GestureDetector(
-      onTap: () => showDoaBottomSheet(context, number), // Tampilkan modal saat diklik
+      onTap:
+          () => showAyatBottomSheet(
+            context,
+            number,
+          ), // Tampilkan modal saat dihold
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10.0),
         child: Column(
@@ -119,7 +164,7 @@ class AyatItem extends StatelessWidget {
                       ),
                     );
                   },
-                )
+                ),
               ],
             ),
             const SizedBox(height: 5),
@@ -128,13 +173,16 @@ class AyatItem extends StatelessWidget {
               style: GoogleFonts.baloo2(
                 fontSize: settings.latinFontSize,
                 color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 5),
             Text(
               translation,
-              style: TextStyle(fontSize: settings.translationFontSize, color: Theme.of(context).colorScheme.secondary),
+              style: TextStyle(
+                fontSize: settings.translationFontSize,
+                color: Theme.of(context).colorScheme.secondary,
+              ),
             ),
             Divider(color: Colors.grey.shade300),
           ],
@@ -143,4 +191,3 @@ class AyatItem extends StatelessWidget {
     );
   }
 }
-

@@ -152,6 +152,7 @@ class _SurahPageState extends State<SurahPage> {
               return Container(
                 key: _ayatKeys[ayat['nomorAyat']],
                 child: AyatItem(
+                  surahNumber: surahData?['nomor'],
                   title: surahData?['namaLatin'],
                   arabicTitle: surahData?['nama'],
                   type: surahData?['tempatTurun'],
