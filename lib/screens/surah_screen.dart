@@ -18,6 +18,7 @@ class _SurahPageState extends State<SurahPage> {
   List<dynamic> ayatList = [];
   int? surahNumber;
   int? ayatNumber;
+  bool hasScrolled = false;
   final Map<int, GlobalKey> _ayatKeys = {};
   final ItemScrollController _itemScrollController = ItemScrollController();
 
@@ -49,7 +50,8 @@ class _SurahPageState extends State<SurahPage> {
 
     // Tunggu sampai UI siap sebelum menggulir
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && ayatNumber != null) {
+      if (mounted && ayatNumber != null && !hasScrolled) {
+        hasScrolled = true; // Set agar tidak scroll lagi
         Future.delayed(Duration(milliseconds: 10), () {
           if (mounted) {
             scrollToAyat(ayatNumber! + 1);

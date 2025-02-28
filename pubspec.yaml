@@ -47,6 +47,9 @@ dependencies:
   azlistview: ^2.0.0
   scrollable_positioned_list: ^0.2.3
   permission_handler: ^11.4.0
+  path_provider: ^2.1.5
+  audioplayers: ^5.2.1
+  flutter_blur: ^0.0.2
 
 
 dev_dependencies:
