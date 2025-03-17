@@ -38,7 +38,7 @@ Terima kasih telah membeli proyek aplikasi Al-Quran Flutter ini. Proyek ini siap
 ## Struktur Proyek
 
 * `lib/`: Berisi kode sumber aplikasi.
-* `assets/`: Berisi aset seperti gambar, audio, dan file JSON.
+* `assets/`: Berisi aset seperti gambar, fonts, dan file JSON Surah & Doa.
 * `pubspec.yaml`: Berisi konfigurasi proyek dan daftar dependensi.
 
 ## Catatan Penting
