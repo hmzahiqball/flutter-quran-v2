@@ -1,16 +1,55 @@
-# flutter_quran
+# Proyek Aplikasi Al-Quran Flutter
 
-A new Flutter project.
+Terima kasih telah membeli proyek aplikasi Al-Quran Flutter ini. Proyek ini siap untuk Anda kembangkan lebih lanjut. Berikut adalah panduan untuk memulai:
 
-## Getting Started
+## Persyaratan
 
-This project is a starting point for a Flutter application.
+* Flutter SDK (versi terbaru disarankan)
+* Android Studio atau VS Code dengan plugin Flutter terpasang
+* Android emulator atau perangkat Android fisik
 
-A few resources to get you started if this is your first Flutter project:
+## Langkah-langkah Instalasi
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+1.  **Instal Flutter SDK:**
+    * Jika Anda belum memiliki Flutter SDK, unduh dan instal dari [situs resmi Flutter](https://flutter.dev/docs/get-started/install).
+    * Pastikan Anda telah menambahkan Flutter ke PATH environment variable Anda.
+2.  **Clone Repositori:**
+    * Ekstrak folder proyek yang Anda terima.
+3.  **Buka Proyek di Editor:**
+    * Buka proyek di Android Studio atau VS Code.
+4.  **Dapatkan Dependensi:**
+    * Buka terminal di direktori proyek dan jalankan perintah:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+    ```bash
+    flutter pub get
+    ```
+
+    * Perintah ini akan mengunduh semua paket yang dibutuhkan oleh proyek.
+5.  **Jalankan Aplikasi:**
+    * Hubungkan perangkat Android Anda atau mulai emulator.
+    * Jalankan perintah berikut di terminal:
+
+    ```bash
+    flutter run
+    ```
+
+    * Aplikasi akan berjalan di perangkat atau emulator Anda.
+
+## Struktur Proyek
+
+* `lib/`: Berisi kode sumber aplikasi.
+* `assets/`: Berisi aset seperti gambar, audio, dan file JSON.
+* `pubspec.yaml`: Berisi konfigurasi proyek dan daftar dependensi.
+
+## Catatan Penting
+
+* Proyek ini hanya mendukung bahasa Indonesia.
+* Belum ada hak cipta yang terdaftar.
+* Terdapat solusi pengoptimalan play audio yang belum terselesaikan, dimana ketika download audio ayat berikutnya belum selesai, audio akan berhenti.
+* Anda dapat menyesuaikan dan mengembangkan aplikasi ini sesuai kebutuhan Anda.
+
+## Kontribusi
+
+Jika Anda menemukan bug atau memiliki saran perbaikan, jangan ragu untuk menghubungi kami.
+
+Terima kasih!
