@@ -39,6 +39,13 @@ class _SurahPageState extends State<SurahPage> {
     }
   }
 
+  @override
+void initState() {
+  super.initState();
+  AudioController().setScrollController(_itemScrollController);
+}
+  
+
   Future<void> loadAyatData(int nomor) async {
     String data = await rootBundle.loadString('assets/json/surah/$nomor.json');
     Map<String, dynamic> jsonResult = json.decode(data);
@@ -54,7 +61,8 @@ class _SurahPageState extends State<SurahPage> {
         hasScrolled = true; // Set agar tidak scroll lagi
         Future.delayed(Duration(milliseconds: 10), () {
           if (mounted) {
-            scrollToAyat(ayatNumber! + 1);
+            AudioController().scrollToAyat(ayatNumber!, isLastRead: true);
+            // scrollToAyat(ayatNumber! + 1);
           }
         });
       }

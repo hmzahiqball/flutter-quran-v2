@@ -14,6 +14,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart' as dio_package;
 import 'dart:async';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class CancelToken {
   bool isCancelled = false;
@@ -25,6 +26,12 @@ class CancelToken {
 
 class AudioController {
   static final AudioController _instance = AudioController._internal();
+  final ItemScrollController itemScrollController = ItemScrollController();
+  ItemScrollController? scrollController;
+
+void setScrollController(ItemScrollController controller) {
+  scrollController = controller;
+}
 
   factory AudioController() {
     return _instance;
@@ -41,19 +48,30 @@ class AudioController {
   // Queue for background downloads
   final List<Map<String, dynamic>> _downloadQueue = [];
   bool _isDownloading = false;
+  
+  // Map to store each ayat's position
+  final Map<String, GlobalKey> _ayatKeys = {};
 
   // Stream untuk menerima event perubahan status player
   final StreamController<bool> _playerStatusController = StreamController<bool>.broadcast();
   Stream<bool> get onPlayerStatusChanged => _playerStatusController.stream;
 
+  // New stream for ayat changes
+  final StreamController<Map<String, dynamic>> _ayatChangeController = StreamController<Map<String, dynamic>>.broadcast();
+  Stream<Map<String, dynamic>> get onAyatChanged => _ayatChangeController.stream;
+
   void registerAyatItem(_AyatItemState ayatItem) {
     final key = "${ayatItem.widget.surahNumber}_${ayatItem.widget.number}";
     _ayatItems[key] = ayatItem;
+    
+    // Register the ayat's key for scrolling
+    _ayatKeys[key] = GlobalKey();
   }
 
   void unregisterAyatItem(_AyatItemState ayatItem) {
     final key = "${ayatItem.widget.surahNumber}_${ayatItem.widget.number}";
     _ayatItems.remove(key);
+    _ayatKeys.remove(key);
 
     if (_activePlayer == ayatItem) {
       _activePlayer = null;
@@ -68,6 +86,32 @@ class AudioController {
     }
     _activePlayer = player;
     _playerStatusController.add(true);
+    
+    // Notify listeners about the ayat change
+    _ayatChangeController.add({
+      'surahNumber': player.widget.surahNumber,
+      'ayatNumber': player.widget.number
+    });
+    
+    // Scroll to the active ayat
+    scrollToAyat(player.widget.number); // Untuk scroll saat audio diputar
+  }
+
+  GlobalKey? getAyatKey(int surahNumber, int ayatNumber) {
+    final key = "${surahNumber}_${ayatNumber}";
+    return _ayatKeys[key];
+  }
+
+  void scrollToAyat(int ayatNumber, {bool isLastRead = false}) {
+    if (scrollController == null) return;
+
+    int index = isLastRead ? ayatNumber - 1 : ayatNumber + 1;
+
+    scrollController!.scrollTo(
+      index: ayatNumber + 1,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
   }
 
   _AyatItemState? findAyatItem(int surahNumber, int ayatNumber) {
@@ -147,6 +191,7 @@ class AudioController {
 
   void dispose() {
     _playerStatusController.close();
+    _ayatChangeController.close();
   }
 }
 
@@ -159,6 +204,7 @@ class AyatItem extends StatefulWidget {
   final String arabicText;
   final String translation;
   final String latin;
+  final GlobalKey itemKey = GlobalKey();
 
   AyatItem({
     required this.surahNumber,
@@ -773,6 +819,7 @@ class _AyatItemState extends State<AyatItem> {
     final settings = Provider.of<SettingsProvider>(context);
 
     return GestureDetector(
+      key: widget.itemKey, // Use the item's GlobalKey
       onTap: () => showAyatBottomSheet(context, widget.number),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10.0),
