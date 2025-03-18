@@ -13,9 +13,8 @@ import 'dart:convert';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart' as dio_package;
-import 'dart:async'; // Untuk StreamController
+import 'dart:async';
 
-// Class CancelToken dibuat sendiri
 class CancelToken {
   bool isCancelled = false;
 
@@ -24,7 +23,6 @@ class CancelToken {
   }
 }
 
-// AudioController singleton untuk mengelola status audio antar widget AyatItem
 class AudioController {
   static final AudioController _instance = AudioController._internal();
 
@@ -34,13 +32,18 @@ class AudioController {
 
   AudioController._internal();
 
-  final Map<String, _AyatItemState> _ayatItems =
-      {}; // key: "${surahNumber}_${ayatNumber}"
+  final Map<String, _AyatItemState> _ayatItems = {};
   _AyatItemState? _activePlayer;
+  
+  // Track download status for each ayat
+  final Map<String, bool> _downloadStatus = {}; // true = downloaded, false = downloading
+
+  // Queue for background downloads
+  final List<Map<String, dynamic>> _downloadQueue = [];
+  bool _isDownloading = false;
 
   // Stream untuk menerima event perubahan status player
-  final StreamController<bool> _playerStatusController =
-      StreamController<bool>.broadcast();
+  final StreamController<bool> _playerStatusController = StreamController<bool>.broadcast();
   Stream<bool> get onPlayerStatusChanged => _playerStatusController.stream;
 
   void registerAyatItem(_AyatItemState ayatItem) {
@@ -70,6 +73,76 @@ class AudioController {
   _AyatItemState? findAyatItem(int surahNumber, int ayatNumber) {
     final key = "${surahNumber}_${ayatNumber}";
     return _ayatItems[key];
+  }
+
+  // Get download status for a specific ayat
+  bool isAyatDownloaded(int surahNumber, int ayatNumber, String qariId) {
+    final key = "${surahNumber}_${ayatNumber}_$qariId";
+    return _downloadStatus[key] == true;
+  }
+
+  // Set download status for a specific ayat
+  void setAyatDownloadStatus(int surahNumber, int ayatNumber, String qariId, bool status) {
+    final key = "${surahNumber}_${ayatNumber}_$qariId";
+    _downloadStatus[key] = status;
+  }
+
+  // Add ayat to download queue
+  Future<void> queueAyatDownload(int surahNumber, int ayatNumber, String qariId, BuildContext context) async {
+    final key = "${surahNumber}_${ayatNumber}_$qariId";
+    
+    // Skip if already downloaded or in the queue
+    if (_downloadStatus[key] == true || 
+        _downloadQueue.any((item) => 
+            item['surahNumber'] == surahNumber && 
+            item['ayatNumber'] == ayatNumber && 
+            item['qariId'] == qariId)) {
+      return;
+    }
+    
+    // Add to queue
+    _downloadQueue.add({
+      'surahNumber': surahNumber,
+      'ayatNumber': ayatNumber,
+      'qariId': qariId,
+      'context': context,
+    });
+    
+    // Set initial status to downloading
+    _downloadStatus[key] = false;
+    
+    // Start processing the queue if not already processing
+    if (!_isDownloading) {
+      _processDownloadQueue();
+    }
+  }
+
+  // Process the download queue
+  Future<void> _processDownloadQueue() async {
+    if (_downloadQueue.isEmpty || _isDownloading) return;
+    
+    _isDownloading = true;
+    
+    while (_downloadQueue.isNotEmpty) {
+      final item = _downloadQueue.removeAt(0);
+      final surahNumber = item['surahNumber'];
+      final ayatNumber = item['ayatNumber'];
+      final qariId = item['qariId'];
+      final context = item['context'];
+      
+      final ayatItem = findAyatItem(surahNumber, ayatNumber);
+      if (ayatItem != null) {
+        try {
+          await ayatItem._downloadAudioInBackground(qariId);
+        } catch (e) {
+          print("Error downloading audio: $e");
+          // Set status to not downloaded on error
+          setAyatDownloadStatus(surahNumber, ayatNumber, qariId, false);
+        }
+      }
+    }
+    
+    _isDownloading = false;
   }
 
   void dispose() {
@@ -109,6 +182,11 @@ class _AyatItemState extends State<AyatItem> {
   String? currentQariId;
   int? currentAyatNumber;
   StreamSubscription? _playerStateSubscription;
+  Duration _duration = Duration.zero;
+  Duration _position = Duration.zero;
+  
+  // Tracks if this ayat is currently being downloaded
+  bool _isDownloading = false;
 
   @override
   void initState() {
@@ -131,6 +209,11 @@ class _AyatItemState extends State<AyatItem> {
           isPlaying = true;
           currentAyatNumber = widget.number;
         });
+        
+        // Queue download of next several ayats when current ayat starts playing
+        if (currentQariId != null) {
+          _queueNextAyatsDownload();
+        }
       } else if (state == PlayerState.paused || state == PlayerState.stopped) {
         setState(() {
           isPlaying = false;
@@ -147,6 +230,29 @@ class _AyatItemState extends State<AyatItem> {
     _playerStateSubscription?.cancel();
     AudioController().unregisterAyatItem(this);
     super.dispose();
+  }
+
+  // Queue downloads for next several ayats
+  Future<void> _queueNextAyatsDownload() async {
+    if (currentQariId == null) return;
+    
+    // Download next 5 ayats
+    for (int i = 1; i <= 5; i++) {
+      int nextAyat = widget.number + i;
+      _AyatItemState? nextAyatItem = AudioController().findAyatItem(
+        widget.surahNumber,
+        nextAyat,
+      );
+      
+      if (nextAyatItem != null) {
+        AudioController().queueAyatDownload(
+          widget.surahNumber,
+          nextAyat,
+          currentQariId!,
+          context
+        );
+      }
+    }
   }
 
   String convertToArabicNumeral(int number) {
@@ -185,67 +291,149 @@ class _AyatItemState extends State<AyatItem> {
     return File(filePath).exists();
   }
 
+  // Method to get audio URL from JSON for a specific ayat
+  Future<String?> _getAudioUrl(int surahNumber, int ayatNumber, String qariId) async {
+    try {
+      String jsonString = await rootBundle.loadString(
+        'assets/json/surah/$surahNumber.json',
+      );
+      Map<String, dynamic> surahData = json.decode(jsonString);
+      List<dynamic> ayatList = surahData['data']['ayat'];
+      var ayatData = ayatList.firstWhereOrNull(
+        (ayat) => ayat['nomorAyat'] == ayatNumber,
+      );
+
+      if (ayatData != null) {
+        return ayatData['audio'][qariId];
+      }
+    } catch (e) {
+      print("Error saat membaca JSON: $e");
+    }
+    return null;
+  }
+
+  // Background download without showing dialog
+  Future<void> _downloadAudioInBackground(String qariId) async {
+    if (_isDownloading) return;
+    
+    _isDownloading = true;
+    final fileName = "${widget.surahNumber}_${widget.number}_$qariId.mp3";
+    final filePath = await getAudioFilePath(fileName);
+
+    // Check if file already exists
+    if (await File(filePath).exists()) {
+      AudioController().setAyatDownloadStatus(widget.surahNumber, widget.number, qariId, true);
+      _isDownloading = false;
+      return;
+    }
+
+    try {
+      String? audioUrl = await _getAudioUrl(widget.surahNumber, widget.number, qariId);
+      
+      if (audioUrl == null) {
+        _isDownloading = false;
+        return;
+      }
+
+      // Download file
+      final dioInstance = dio_package.Dio();
+      await dioInstance.download(
+        audioUrl,
+        filePath,
+      );
+
+      // Mark as downloaded
+      AudioController().setAyatDownloadStatus(widget.surahNumber, widget.number, qariId, true);
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Ayat ${widget.number} berhasil diunduh", style: TextStyle(color: Colors.white)),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      print("Error downloading audio: $e");
+      // Delete partial file if it exists
+      if (await File(filePath).exists()) {
+        await File(filePath).delete();
+      }
+      AudioController().setAyatDownloadStatus(widget.surahNumber, widget.number, qariId, false);
+    }
+    
+    _isDownloading = false;
+  }
+
+  // Primary download function when user explicitly wants to play
   Future<void> downloadAudio(
     BuildContext context,
     String audioUrl,
     String fileName,
   ) async {
     final filePath = await getAudioFilePath(fileName);
+    
+    // Extract qari ID from filename
+    final qariId = fileName.split('_').last.split('.').first;
 
     // Gunakan library dio
     final dioInstance = dio_package.Dio();
-    final dioCancelToken = dio_package.CancelToken();
 
     try {
-      // Cek apakah file sudah ada, jika ada hapus
+      // Cek apakah file sudah ada
       if (await File(filePath).exists()) {
-        // await File(filePath).delete();
+        AudioController().setAyatDownloadStatus(widget.surahNumber, widget.number, qariId, true);
         await _audioPlayer.play(DeviceFileSource(filePath));
-        return; // Keluar dari fungsi setelah memutar audio
+        AudioController().setActivePlayer(this);
+        return;
       }
 
       // Mulai download audio
+      setState(() {
+        _isDownloading = true;
+      });
+      
       await dioInstance.download(
         audioUrl,
         filePath,
-        cancelToken: dioCancelToken,
       );
 
+      setState(() {
+        _isDownloading = false;
+      });
+
       // Setelah download selesai, tampilkan snackbar
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Unduhan selesai", style: TextStyle(color: Colors.white)),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-        ),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Unduhan selesai", style: TextStyle(color: Colors.white)),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+        );
+      }
+
+      // Set download status
+      AudioController().setAyatDownloadStatus(widget.surahNumber, widget.number, qariId, true);
 
       // Set qari yang sedang diputar
       setState(() {
-        currentQariId = fileName.split('_').last.split('.').first;
+        currentQariId = qariId;
         currentAyatNumber = widget.number;
       });
-    } on Exception catch (e) {
-      if (context.mounted) {
-        // Jika terjadi error, hapus file jika ada
-        if (await File(filePath).exists()) {
-          await File(filePath).delete();
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Error: Tidak Dapat Mendapatkan Audio", style: TextStyle(color: Colors.white)),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-          ),
-        );
-        // Download ulang setelah error
-        await downloadAudio(context, audioUrl, fileName);
-      }
-    }
-    try{
-      // Beritahu AudioController bahwa player ini aktif
-      AudioController().setActivePlayer(this);
-      // Putar audio
+      
+      // Play audio
       await _audioPlayer.play(DeviceFileSource(filePath));
-    } on Exception catch (e) {
+      AudioController().setActivePlayer(this);
+      
+      // Queue download for next ayats
+      _queueNextAyatsDownload();
+      
+    } catch (e) {
+      setState(() {
+        _isDownloading = false;
+      });
+      
       if (context.mounted) {
         // Jika terjadi error, hapus file jika ada
         if (await File(filePath).exists()) {
@@ -257,8 +445,6 @@ class _AyatItemState extends State<AyatItem> {
             backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
-        // Download ulang setelah error
-        await downloadAudio(context, audioUrl, fileName);
       }
     }
   }
@@ -299,32 +485,17 @@ class _AyatItemState extends State<AyatItem> {
     final fileName = "${widget.surahNumber}_${widget.number}_$qariId.mp3";
     final filePath = await getAudioFilePath(fileName);
 
-    bool exists = await checkAudioExists(fileName);
-    if (!exists) {
-      try {
-        String jsonString = await rootBundle.loadString(
-          'assets/json/surah/${widget.surahNumber}.json',
-        );
-        Map<String, dynamic> surahData = json.decode(jsonString);
-        List<dynamic> ayatList = surahData['data']['ayat'];
-        var ayatData = ayatList.firstWhereOrNull(
-          (ayat) => ayat['nomorAyat'] == widget.number,
-        );
-
-        if (ayatData != null) {
-          String? audioUrl = ayatData['audio'][qariId];
-          if (audioUrl != null) {
-            if (autoPlay) {
-              showDownloadDialog(context, audioUrl, fileName);
-            } else {
-              return;
-            }
-          }
-        }
-      } catch (e) {
-        print("Error saat membaca JSON: $e");
-      }
-    } else {
+    // Check download status first
+    bool isDownloaded = AudioController().isAyatDownloaded(widget.surahNumber, widget.number, qariId);
+    bool fileExists = await checkAudioExists(fileName);
+    
+    // Update status if file exists but not marked as downloaded
+    if (fileExists && !isDownloaded) {
+      AudioController().setAyatDownloadStatus(widget.surahNumber, widget.number, qariId, true);
+      isDownloaded = true;
+    }
+    
+    if (isDownloaded && fileExists) {
       // Set active ayat
       AudioController().setActivePlayer(this);
 
@@ -334,6 +505,34 @@ class _AyatItemState extends State<AyatItem> {
       });
 
       await _audioPlayer.play(DeviceFileSource(filePath));
+      
+      // Queue download for next ayats
+      _queueNextAyatsDownload();
+      return;
+    }
+    
+    // Check if currently downloading
+    if (_isDownloading) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Pengunduhan belum selesai, coba lagi", style: TextStyle(color: Colors.white)),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+        ),
+      );
+      return;
+    }
+
+    // Need to download the file
+    try {
+      String? audioUrl = await _getAudioUrl(widget.surahNumber, widget.number, qariId);
+      
+      if (audioUrl != null) {
+        if (autoPlay) {
+          showDownloadDialog(context, audioUrl, fileName);
+        }
+      }
+    } catch (e) {
+      print("Error saat membaca JSON: $e");
     }
   }
 
@@ -369,7 +568,29 @@ class _AyatItemState extends State<AyatItem> {
       widget.surahNumber,
       prevAyat,
     );
+    
     if (prevAyatItem != null) {
+      // Check if downloaded
+      bool isDownloaded = AudioController().isAyatDownloaded(
+        widget.surahNumber, 
+        prevAyat, 
+        currentQariId!
+      );
+      
+      bool fileExists = await prevAyatItem.checkAudioExists(
+        "${widget.surahNumber}_${prevAyat}_${currentQariId!}.mp3"
+      );
+      
+      if (!isDownloaded || !fileExists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Pengunduhan belum selesai, coba lagi", style: TextStyle(color: Colors.white)),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+        );
+        return;
+      }
+      
       await stopAudio();
       prevAyatItem.playAudio(currentQariId!);
     }
@@ -385,28 +606,41 @@ class _AyatItemState extends State<AyatItem> {
       widget.surahNumber,
       nextAyat,
     );
+    
     if (nextAyatItem != null) {
-    // Download audio untuk ayat berikutnya tanpa progress
-    String fileName = "${nextAyatItem.widget.surahNumber}_${nextAyatItem.widget.number}_$currentQariId.mp3";
-    String audioUrl = ""; // Ambil URL audio dari data yang sesuai
-
-    // Ambil URL audio dari JSON atau sumber lain
-    String jsonString = await rootBundle.loadString(
-      'assets/json/surah/${nextAyatItem.widget.surahNumber}.json',
-    );
-    Map<String, dynamic> surahData = json.decode(jsonString);
-    List<dynamic> ayatList = surahData['data']['ayat'];
-    var ayatData = ayatList.firstWhereOrNull(
-      (ayat) => ayat['nomorAyat'] == nextAyatItem.widget.number,
-    );
-
-    if (ayatData != null) {
-      audioUrl = ayatData['audio'][currentQariId];
-    }
-
-    // Download audio untuk ayat berikutnya tanpa progress
-    await downloadAudio(context, audioUrl, fileName);
-    nextAyatItem.playAudio(currentQariId!);
+      // Check if downloaded
+      bool isDownloaded = AudioController().isAyatDownloaded(
+        widget.surahNumber, 
+        nextAyat, 
+        currentQariId!
+      );
+      
+      bool fileExists = await nextAyatItem.checkAudioExists(
+        "${widget.surahNumber}_${nextAyat}_${currentQariId!}.mp3"
+      );
+      
+      if (!isDownloaded || !fileExists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Pengunduhan belum selesai, coba lagi", style: TextStyle(color: Colors.white)),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+        );
+        
+        // Try to download it now
+        String? audioUrl = await _getAudioUrl(widget.surahNumber, nextAyat, currentQariId!);
+        if (audioUrl != null) {
+          nextAyatItem.downloadAudio(
+            context, 
+            audioUrl, 
+            "${widget.surahNumber}_${nextAyat}_${currentQariId!}.mp3"
+          );
+        }
+        return;
+      }
+      
+      await stopAudio();
+      nextAyatItem.playAudio(currentQariId!);
     }
   }
 
