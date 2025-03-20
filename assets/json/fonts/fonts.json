@@ -1,0 +1,48 @@
+{
+  "ArabicFonts": [
+    "Scheherazade New",
+    "Amiri Quran",
+    "Amiri",
+    "Lateef",
+    "Noto Naskh Arabic",
+    "Noto Nastaliq Urdu",
+    "Baloo Bhaijaan 2",
+    "Harmattan",
+    "Reem Kufi",
+    "Markazi Text",
+    "Cairo",
+    "Changa",
+    "El Messiri",
+    "Almarai"
+  ],
+  "TextFonts": [
+    "Merriweather",
+    "Lora",
+    "Noto Serif",
+    "Playfair Display",
+    "Crimson Text",
+    "Roboto",
+    "Noto Sans",
+    "Open Sans",
+    "Inter",
+    "Source Sans Pro",
+    "Baloo 2",
+    "Outfit"
+  ],
+  "LatinFonts": [
+    "Baloo 2",
+    "Noto Sans",
+    "Noto Serif",
+    "Charis SIL",
+    "Gentium Plus",
+    "Merriweather",
+    "Crimson Pro",
+    "EB Garamond",
+    "Source Sans Pro",
+    "IBM Plex Sans",
+    "Montserrat",
+    "Lora",
+    "Spectral"
+  ]
+}
+  

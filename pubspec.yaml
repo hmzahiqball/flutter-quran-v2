@@ -85,6 +85,7 @@ flutter:
     - assets/json/kota.json
     - assets/json/surah.json
     - assets/json/doa.json
+    - assets/json/fonts/fonts.json
     - assets/json/surah/1.json
     - assets/json/surah/2.json
     - assets/json/surah/3.json
