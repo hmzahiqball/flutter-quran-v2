@@ -7,12 +7,20 @@ class SettingsProvider extends ChangeNotifier {
   double _translationFontSize = 16.0;
   String _arabicFontFamily = 'Scheherazade New';
   FontWeight _arabicFontWeight = FontWeight.bold;
+  String _latinFontFamily = 'Baloo 2';
+  FontWeight _latinFontWeight = FontWeight.bold;
+  String _translateFontFamily = 'Outfit';
+  FontWeight _translateFontWeight = FontWeight.bold;
 
   double get arabicFontSize => _arabicFontSize;
   double get latinFontSize => _latinFontSize;
   double get translationFontSize => _translationFontSize;
   String get arabicFontFamily => _arabicFontFamily;
   FontWeight get arabicFontWeight => _arabicFontWeight;
+  String get latinFontFamily => _latinFontFamily;
+  FontWeight get latinFontWeight => _latinFontWeight;
+  String get translateFontFamily => _translateFontFamily;
+  FontWeight get translateFontWeight => _translateFontWeight;
 
   SettingsProvider() {
     _loadSettings();
@@ -26,6 +34,14 @@ class SettingsProvider extends ChangeNotifier {
     _arabicFontFamily = prefs.getString('arabicFontFamily') ?? 'Scheherazade New';
     String weightString = prefs.getString('arabicFontWeight') ?? 'normal';
     _arabicFontWeight = (weightString == 'bold') ? FontWeight.bold : FontWeight.normal;
+
+    _latinFontFamily = prefs.getString('latinFontFamily') ?? 'Scheherazade New';
+    String latinWeightString = prefs.getString('latinFontWeight') ?? 'normal';
+    _latinFontWeight = (latinWeightString == 'bold') ? FontWeight.bold : FontWeight.normal;
+
+    _translateFontFamily = prefs.getString('translateFontFamily') ?? 'Scheherazade New';
+    String translateFontWeight = prefs.getString('translateFontWeight') ?? 'normal';
+    _translateFontWeight = (translateFontWeight == 'bold') ? FontWeight.bold : FontWeight.normal;
     notifyListeners();
   }
 
@@ -55,10 +71,34 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setLatinFontFamily(String font) async {
+    _latinFontFamily = font;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('latinFontFamily', font);
+    notifyListeners();
+  }
+
+  void setLatinFontWeight(FontWeight weight) async {
+    _latinFontWeight = weight;
+    notifyListeners();
+  }
+
   void setTranslationFontSize(double value) async {
     _translationFontSize = value;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('translationFontSize', value);
+    notifyListeners();
+  }
+
+  void setTranslateFontFamily(String font) async {
+    _translateFontFamily = font;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('translateFontFamily', font);
+    notifyListeners();
+  }
+
+  void setTranslateFontWeight(FontWeight weight) async {
+    _translateFontWeight = weight;
     notifyListeners();
   }
 }

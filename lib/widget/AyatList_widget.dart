@@ -868,18 +868,21 @@ class _AyatItemState extends State<AyatItem> {
             const SizedBox(height: 5),
             Text(
               widget.latin,
-              style: GoogleFonts.baloo2(
+              style: GoogleFonts.getFont(
+                settings.latinFontFamily,
                 fontSize: settings.latinFontSize,
+                fontWeight: settings.latinFontWeight,
                 color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 5),
             Text(
               widget.translation,
-              style: TextStyle(
+              style: GoogleFonts.getFont(
+                settings.translateFontFamily,
                 fontSize: settings.translationFontSize,
-                color: Theme.of(context).colorScheme.secondary,
+                fontWeight: settings.translateFontWeight,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
             Divider(color: Colors.grey.shade300),
