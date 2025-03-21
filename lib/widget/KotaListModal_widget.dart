@@ -56,7 +56,7 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
       height: MediaQuery.of(context).size.height * 0.6,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.background,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
@@ -86,7 +86,9 @@ class _LocationPickerWidgetState extends State<LocationPickerWidget> {
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.grey[200],
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Theme.of(context).colorScheme.surface
+                    : Colors.grey[200],
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Padding(

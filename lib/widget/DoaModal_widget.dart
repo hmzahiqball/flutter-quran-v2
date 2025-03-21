@@ -25,7 +25,7 @@ class DoaBottomSheet extends StatelessWidget {
       height: MediaQuery.of(context).size.height * 0.5, // Setengah layar
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF9F9F9),
+        color: Theme.of(context).colorScheme.background,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(

@@ -50,7 +50,7 @@ class _ModalTafsirState extends State<ModalTafsir> {
       height: MediaQuery.of(context).size.height * 0.6,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.background,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(

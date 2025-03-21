@@ -141,9 +141,9 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     return Scaffold(
-      backgroundColor: Color(0xFFF9F9F9),
+      backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
-        backgroundColor: Color(0xFFF9F9F9),
+        backgroundColor: Theme.of(context).colorScheme.background,
         elevation: 0,
         title:
             isSearching
@@ -326,44 +326,61 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.home,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            label: 'Home',
+      bottomNavigationBar: ClipRRect(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(30),
+          topRight: Radius.circular(30),
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black38,
+                spreadRadius: 0,
+                blurRadius: 10,
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.schedule,
-              color: Theme.of(context).colorScheme.secondary,
-            ),
-            label: 'Jadwal Adzan',
+          child: BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
+            items: [
+              BottomNavigationBarItem(
+                icon: Icon(
+                  Icons.home,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(
+                  Icons.schedule,
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
+                label: 'Jadwal Adzan',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(
+                  Icons.settings,
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
+                label: 'Settings',
+              ),
+            ],
+            onTap: (index) {
+              switch (index) {
+                case 0:
+                  Navigator.pushReplacementNamed(context, '/home');
+                  break;
+                case 1:
+                  Navigator.pushReplacementNamed(context, '/jadwal');
+                  break;
+                case 2:
+                  showSettingBottomSheet(context);
+                  break;
+              }
+            },
           ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.settings,
-              color: Theme.of(context).colorScheme.secondary,
-            ),
-            label: 'Settings',
-          ),
-        ],
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              Navigator.pushReplacementNamed(context, '/home');
-              break;
-            case 1:
-              Navigator.pushReplacementNamed(context, '/jadwal');
-              break;
-            case 2:
-              showSettingBottomSheet(context);
-              break;
-          }
-        },
+        ),
       ),
     );
   }

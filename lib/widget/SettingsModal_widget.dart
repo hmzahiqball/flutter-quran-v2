@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../provider/settings_provider.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'ThemeSwitcher_widget.dart';
 
 class SettingsWidget extends StatefulWidget {
   const SettingsWidget({Key? key}) : super(key: key);
@@ -12,27 +13,25 @@ class SettingsWidget extends StatefulWidget {
   State<SettingsWidget> createState() => _SettingsWidgetState();
 }
 
-
-
 class _SettingsWidgetState extends State<SettingsWidget> {
   int _arabicFontSize = 22;
   int _latinFontSize = 16;
   int _translationFontSize = 16;
   String _arabicFontFamily = 'ScheherazadeNew';
   FontWeight _arabicFontWeight = FontWeight.bold;
-  
+
   String _latinFontFamily = 'Baloo 2';
   FontWeight _latinFontWeight = FontWeight.bold;
-  
+
   String _translateFontFamily = 'Outfit';
   FontWeight _translateFontWeight = FontWeight.normal;
 
   List<String> fonts = [];
   List<String> filteredFonts = [];
-  
+
   List<String> latinFonts = [];
   List<String> filteredLatinFonts = [];
-  
+
   List<String> translatefonts = [];
   List<String> filteredTranslateFonts = [];
 
@@ -47,24 +46,28 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   }
 
   Future<void> _loadFonts() async {
-    final String arabicResponse = await rootBundle.loadString('assets/json/fonts/fonts.json');
+    final String arabicResponse = await rootBundle.loadString(
+      'assets/json/fonts/fonts.json',
+    );
     final arabicData = json.decode(arabicResponse);
-    
-    final String latinResponse = await rootBundle.loadString('assets/json/fonts/fonts.json');
+
+    final String latinResponse = await rootBundle.loadString(
+      'assets/json/fonts/fonts.json',
+    );
     final latinData = json.decode(latinResponse);
-    
-    final String translateResponse = await rootBundle.loadString('assets/json/fonts/fonts.json');
+
+    final String translateResponse = await rootBundle.loadString(
+      'assets/json/fonts/fonts.json',
+    );
     final translateData = json.decode(translateResponse);
 
     setState(() {
       fonts = List<String>.from(arabicData["ArabicFonts"]);
       filteredFonts = List.from(fonts);
 
-      
       latinFonts = List<String>.from(latinData["LatinFonts"]);
       filteredLatinFonts = List.from(latinFonts);
 
-      
       translatefonts = List<String>.from(translateData["TextFonts"]);
       filteredTranslateFonts = List.from(translatefonts);
 
@@ -78,19 +81,24 @@ class _SettingsWidgetState extends State<SettingsWidget> {
       _arabicFontSize = prefs.getInt('arabicFontSize') ?? 22;
       _latinFontSize = prefs.getInt('latinFontSize') ?? 16;
       _translationFontSize = prefs.getInt('translationFontSize') ?? 16;
-      _arabicFontFamily = prefs.getString('arabicFontFamily') ?? 'ScheherazadeNew';
+      _arabicFontFamily =
+          prefs.getString('arabicFontFamily') ?? 'ScheherazadeNew';
       String weightString = prefs.getString('arabicFontWeight') ?? 'normal';
-      _arabicFontWeight = (weightString == 'bold') ? FontWeight.bold : FontWeight.normal;
+      _arabicFontWeight =
+          (weightString == 'bold') ? FontWeight.bold : FontWeight.normal;
 
-      
       _latinFontFamily = prefs.getString('latinFontFamily') ?? 'Baloo 2';
       String latinWeightString = prefs.getString('latinFontWeight') ?? 'normal';
-      _latinFontWeight = (latinWeightString == 'bold') ? FontWeight.bold : FontWeight.normal;
+      _latinFontWeight =
+          (latinWeightString == 'bold') ? FontWeight.bold : FontWeight.normal;
 
-      
       _translateFontFamily = prefs.getString('translateFontFamily') ?? 'Outfit';
-      String translateWeightString = prefs.getString('translateFontWeight') ?? 'normal';
-      _translateFontWeight = (translateWeightString == 'bold') ? FontWeight.bold : FontWeight.normal;
+      String translateWeightString =
+          prefs.getString('translateFontWeight') ?? 'normal';
+      _translateFontWeight =
+          (translateWeightString == 'bold')
+              ? FontWeight.bold
+              : FontWeight.normal;
     });
   }
 
@@ -104,13 +112,11 @@ class _SettingsWidgetState extends State<SettingsWidget> {
         (_arabicFontWeight == FontWeight.bold) ? 'bold' : 'normal';
     await prefs.setString('arabicFontWeight', weightString);
 
-    
     prefs.setString('latinFontFamily', _latinFontFamily);
     String latinWeightString =
         (_latinFontWeight == FontWeight.bold) ? 'bold' : 'normal';
     await prefs.setString('latinFontWeight', latinWeightString);
 
-    
     prefs.setString('translateFontFamily', _translateFontFamily);
     String translateFontWeight =
         (_translateFontWeight == FontWeight.bold) ? 'bold' : 'normal';
@@ -122,14 +128,17 @@ class _SettingsWidgetState extends State<SettingsWidget> {
       context: context,
       builder: (context) {
         final settings = Provider.of<SettingsProvider>(context);
-        return StatefulBuilder( // Tambahkan StatefulBuilder di sini
+        return StatefulBuilder(
+          // Tambahkan StatefulBuilder di sini
           builder: (context, setModalState) {
             return Container(
               height: MediaQuery.of(context).size.height * 0.6,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
               ),
               child: Column(
                 children: [
@@ -157,19 +166,23 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                           decoration: InputDecoration(
                             border: InputBorder.none,
                             hintText: 'Search Fonts...',
-                            hintStyle: TextStyle(
-                              color: Colors.grey[400],
-                            ),
+                            hintStyle: TextStyle(color: Colors.grey[400]),
                           ),
                           onChanged: (query) {
-                            setModalState(() { // Gunakan setModalState agar UI modal terupdate
+                            setModalState(() {
+                              // Gunakan setModalState agar UI modal terupdate
                               searchQuery = query;
                               if (query.isEmpty) {
                                 filteredFonts = List.from(fonts);
                               } else {
-                                filteredFonts = fonts
-                                    .where((font) => font.toLowerCase().startsWith(query.toLowerCase()))
-                                    .toList();
+                                filteredFonts =
+                                    fonts
+                                        .where(
+                                          (font) => font
+                                              .toLowerCase()
+                                              .startsWith(query.toLowerCase()),
+                                        )
+                                        .toList();
                               }
                             });
                           },
@@ -179,27 +192,29 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                   ),
                   const SizedBox(height: 10),
                   isLoading
-                      ? Expanded(child: Center(child: CircularProgressIndicator()))
+                      ? Expanded(
+                        child: Center(child: CircularProgressIndicator()),
+                      )
                       : Expanded(
-                          child: ListView.builder(
-                            itemCount: filteredFonts.length,
-                            itemBuilder: (context, index) {
-                              final font = filteredFonts[index];
-                              return ListTile(
-                                title: Text(font),
-                                selected: settings.arabicFontFamily == font,
-                                onTap: () {
-                                  settings.setArabicFontFamily(font);
-                                  setState(() {
-                                    _arabicFontFamily = font;
-                                  });
-                                  _saveSettings();
-                                  Navigator.pop(context);
-                                },
-                              );
-                            },
-                          ),
+                        child: ListView.builder(
+                          itemCount: filteredFonts.length,
+                          itemBuilder: (context, index) {
+                            final font = filteredFonts[index];
+                            return ListTile(
+                              title: Text(font),
+                              selected: settings.arabicFontFamily == font,
+                              onTap: () {
+                                settings.setArabicFontFamily(font);
+                                setState(() {
+                                  _arabicFontFamily = font;
+                                });
+                                _saveSettings();
+                                Navigator.pop(context);
+                              },
+                            );
+                          },
                         ),
+                      ),
                 ],
               ),
             );
@@ -214,14 +229,17 @@ class _SettingsWidgetState extends State<SettingsWidget> {
       context: context,
       builder: (context) {
         final settings = Provider.of<SettingsProvider>(context);
-        return StatefulBuilder( // Tambahkan StatefulBuilder di sini
+        return StatefulBuilder(
+          // Tambahkan StatefulBuilder di sini
           builder: (context, setModalState) {
             return Container(
               height: MediaQuery.of(context).size.height * 0.6,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
               ),
               child: Column(
                 children: [
@@ -249,19 +267,23 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                           decoration: InputDecoration(
                             border: InputBorder.none,
                             hintText: 'Search Fonts...',
-                            hintStyle: TextStyle(
-                              color: Colors.grey[400],
-                            ),
+                            hintStyle: TextStyle(color: Colors.grey[400]),
                           ),
                           onChanged: (query) {
-                            setModalState(() { // Gunakan setModalState agar UI modal terupdate
+                            setModalState(() {
+                              // Gunakan setModalState agar UI modal terupdate
                               searchQuery = query;
                               if (query.isEmpty) {
                                 filteredLatinFonts = List.from(latinFonts);
                               } else {
-                                filteredLatinFonts = latinFonts
-                                    .where((font) => font.toLowerCase().startsWith(query.toLowerCase()))
-                                    .toList();
+                                filteredLatinFonts =
+                                    latinFonts
+                                        .where(
+                                          (font) => font
+                                              .toLowerCase()
+                                              .startsWith(query.toLowerCase()),
+                                        )
+                                        .toList();
                               }
                             });
                           },
@@ -271,27 +293,29 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                   ),
                   const SizedBox(height: 10),
                   isLoading
-                      ? Expanded(child: Center(child: CircularProgressIndicator()))
+                      ? Expanded(
+                        child: Center(child: CircularProgressIndicator()),
+                      )
                       : Expanded(
-                          child: ListView.builder(
-                            itemCount: filteredLatinFonts.length,
-                            itemBuilder: (context, index) {
-                              final font = filteredLatinFonts[index];
-                              return ListTile(
-                                title: Text(font),
-                                selected: settings.latinFontFamily == font,
-                                onTap: () {
-                                  settings.setLatinFontFamily(font);
-                                  setState(() {
-                                    _latinFontFamily = font;
-                                  });
-                                  _saveSettings();
-                                  Navigator.pop(context);
-                                },
-                              );
-                            },
-                          ),
+                        child: ListView.builder(
+                          itemCount: filteredLatinFonts.length,
+                          itemBuilder: (context, index) {
+                            final font = filteredLatinFonts[index];
+                            return ListTile(
+                              title: Text(font),
+                              selected: settings.latinFontFamily == font,
+                              onTap: () {
+                                settings.setLatinFontFamily(font);
+                                setState(() {
+                                  _latinFontFamily = font;
+                                });
+                                _saveSettings();
+                                Navigator.pop(context);
+                              },
+                            );
+                          },
                         ),
+                      ),
                 ],
               ),
             );
@@ -306,14 +330,17 @@ class _SettingsWidgetState extends State<SettingsWidget> {
       context: context,
       builder: (context) {
         final settings = Provider.of<SettingsProvider>(context);
-        return StatefulBuilder( // Tambahkan StatefulBuilder di sini
+        return StatefulBuilder(
+          // Tambahkan StatefulBuilder di sini
           builder: (context, setModalState) {
             return Container(
               height: MediaQuery.of(context).size.height * 0.6,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
               ),
               child: Column(
                 children: [
@@ -341,19 +368,25 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                           decoration: InputDecoration(
                             border: InputBorder.none,
                             hintText: 'Search Fonts...',
-                            hintStyle: TextStyle(
-                              color: Colors.grey[400],
-                            ),
+                            hintStyle: TextStyle(color: Colors.grey[400]),
                           ),
                           onChanged: (query) {
-                            setModalState(() { // Gunakan setModalState agar UI modal terupdate
+                            setModalState(() {
+                              // Gunakan setModalState agar UI modal terupdate
                               searchQuery = query;
                               if (query.isEmpty) {
-                                filteredTranslateFonts = List.from(translatefonts);
+                                filteredTranslateFonts = List.from(
+                                  translatefonts,
+                                );
                               } else {
-                                filteredTranslateFonts = translatefonts
-                                    .where((font) => font.toLowerCase().startsWith(query.toLowerCase()))
-                                    .toList();
+                                filteredTranslateFonts =
+                                    translatefonts
+                                        .where(
+                                          (font) => font
+                                              .toLowerCase()
+                                              .startsWith(query.toLowerCase()),
+                                        )
+                                        .toList();
                               }
                             });
                           },
@@ -363,27 +396,29 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                   ),
                   const SizedBox(height: 10),
                   isLoading
-                      ? Expanded(child: Center(child: CircularProgressIndicator()))
+                      ? Expanded(
+                        child: Center(child: CircularProgressIndicator()),
+                      )
                       : Expanded(
-                          child: ListView.builder(
-                            itemCount: filteredTranslateFonts.length,
-                            itemBuilder: (context, index) {
-                              final font = filteredTranslateFonts[index];
-                              return ListTile(
-                                title: Text(font),
-                                selected: settings.translateFontFamily == font,
-                                onTap: () {
-                                  settings.setTranslateFontFamily(font);
-                                  setState(() {
-                                    _translateFontFamily = font;
-                                  });
-                                  _saveSettings();
-                                  Navigator.pop(context);
-                                },
-                              );
-                            },
-                          ),
+                        child: ListView.builder(
+                          itemCount: filteredTranslateFonts.length,
+                          itemBuilder: (context, index) {
+                            final font = filteredTranslateFonts[index];
+                            return ListTile(
+                              title: Text(font),
+                              selected: settings.translateFontFamily == font,
+                              onTap: () {
+                                settings.setTranslateFontFamily(font);
+                                setState(() {
+                                  _translateFontFamily = font;
+                                });
+                                _saveSettings();
+                                Navigator.pop(context);
+                              },
+                            );
+                          },
                         ),
+                      ),
                 ],
               ),
             );
@@ -524,7 +559,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
       height: MediaQuery.of(context).size.height * 0.6,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.background,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SingleChildScrollView(
@@ -541,9 +576,13 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                 ),
               ),
             ),
-            const Text(
-              'Font Settings',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ListTile(
+              title: const Text(
+                'Pengaturan',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              trailing:
+                  const ThemeSwitcher(), // Tambahkan switcher di sebelah kanan
             ),
             const SizedBox(height: 10),
 
@@ -568,7 +607,10 @@ class _SettingsWidgetState extends State<SettingsWidget> {
             ),
 
             ListTile(
-              title: const Text('Arabic Font Weight', style: TextStyle(fontSize: 16)),
+              title: const Text(
+                'Arabic Font Weight',
+                style: TextStyle(fontSize: 16),
+              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -608,7 +650,10 @@ class _SettingsWidgetState extends State<SettingsWidget> {
             ),
 
             ListTile(
-              title: const Text('Latin Font Weight', style: TextStyle(fontSize: 16)),
+              title: const Text(
+                'Latin Font Weight',
+                style: TextStyle(fontSize: 16),
+              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -629,7 +674,10 @@ class _SettingsWidgetState extends State<SettingsWidget> {
             const Divider(),
 
             ListTile(
-              title: const Text('Translate Font', style: TextStyle(fontSize: 16)),
+              title: const Text(
+                'Translate Font',
+                style: TextStyle(fontSize: 16),
+              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -648,12 +696,17 @@ class _SettingsWidgetState extends State<SettingsWidget> {
             ),
 
             ListTile(
-              title: const Text('Translate Font Weight', style: TextStyle(fontSize: 16)),
+              title: const Text(
+                'Translate Font Weight',
+                style: TextStyle(fontSize: 16),
+              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    _translateFontWeight == FontWeight.bold ? 'Bold' : 'Regular',
+                    _translateFontWeight == FontWeight.bold
+                        ? 'Bold'
+                        : 'Regular',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,

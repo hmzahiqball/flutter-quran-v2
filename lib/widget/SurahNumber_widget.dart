@@ -9,7 +9,7 @@ class SurahNumberIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      painter: SurahNumberPainter(), // Menggunakan Custom Painter
+      painter: SurahNumberPainter(context), // Menggunakan Custom Painter
       child: SizedBox(
         width: 40, // Pastikan ukuran cukup untuk outline
         height: 40,
@@ -25,6 +25,10 @@ class SurahNumberIcon extends StatelessWidget {
 }
 
 class SurahNumberPainter extends CustomPainter {
+  final BuildContext context;
+
+  SurahNumberPainter(this.context);
+
   @override
   void paint(Canvas canvas, Size size) {
     Paint paintBorder = Paint()
@@ -33,7 +37,7 @@ class SurahNumberPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     Paint paintFill = Paint()
-      ..color = Color(0xFFffecdc)
+      ..color = Theme.of(context).colorScheme.background // Ubah warna fill dengan primary
       ..style = PaintingStyle.fill;
 
     Path path = Path();
@@ -68,3 +72,4 @@ class SurahNumberPainter extends CustomPainter {
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
+

@@ -10,7 +10,8 @@ class SettingsProvider extends ChangeNotifier {
   String _latinFontFamily = 'Baloo 2';
   FontWeight _latinFontWeight = FontWeight.bold;
   String _translateFontFamily = 'Outfit';
-  FontWeight _translateFontWeight = FontWeight.bold;
+  FontWeight _translateFontWeight = FontWeight.normal;
+  ThemeMode _themeMode = ThemeMode.system;
 
   double get arabicFontSize => _arabicFontSize;
   double get latinFontSize => _latinFontSize;
@@ -21,6 +22,7 @@ class SettingsProvider extends ChangeNotifier {
   FontWeight get latinFontWeight => _latinFontWeight;
   String get translateFontFamily => _translateFontFamily;
   FontWeight get translateFontWeight => _translateFontWeight;
+  ThemeMode get themeMode => _themeMode;
 
   SettingsProvider() {
     _loadSettings();
@@ -99,6 +101,20 @@ class SettingsProvider extends ChangeNotifier {
 
   void setTranslateFontWeight(FontWeight weight) async {
     _translateFontWeight = weight;
+    notifyListeners();
+  }
+
+  void toggleTheme(bool isDark) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isDarkMode', isDark);
+    _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+    notifyListeners(); // Ini penting agar UI berubah
+  }
+
+  Future<void> loadTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    bool? isDarkMode = prefs.getBool('isDarkMode');
+    _themeMode = isDarkMode == null ? ThemeMode.system : (isDarkMode ? ThemeMode.dark : ThemeMode.light);
     notifyListeners();
   }
 }

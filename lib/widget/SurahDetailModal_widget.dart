@@ -29,7 +29,7 @@ class SurahDetailModal extends StatelessWidget {
       height: MediaQuery.of(context).size.height * 0.5, // Setengah layar
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.background,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
@@ -69,69 +69,68 @@ class SurahDetailModal extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Expanded(
-  child: SingleChildScrollView(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Arti
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Arti: ", style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
-            Expanded(
-              child: Text(arti, style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary)),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Arti
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Arti: ", style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+                      Expanded(
+                        child: Text(arti, style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Jumlah Ayat
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Jumlah Ayat: ", style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+                      Expanded(
+                        child: Text(ayat, style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Tempat Diturunkan
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Tempat Diturunkan: ", style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+                      Expanded(
+                        child: Text(type, style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Urutan Diturunkan
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Urutan Diturunkan: ", style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+                      Expanded(
+                        child: Text(urutan, style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Deskripsi
+                  Text("Deskripsi:", style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
+                  Text(
+                    deskripsi,
+                    style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-        const SizedBox(height: 8),
-
-        // Jumlah Ayat
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Jumlah Ayat: ", style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
-            Expanded(
-              child: Text(ayat, style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary)),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-
-        // Tempat Diturunkan
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Tempat Diturunkan: ", style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
-            Expanded(
-              child: Text(type, style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary)),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-
-        // Urutan Diturunkan
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Urutan Diturunkan: ", style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
-            Expanded(
-              child: Text(urutan, style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary)),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-
-        // Deskripsi
-        Text("Deskripsi:", style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)),
-        Text(
-          deskripsi,
-          style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.primary),
-        ),
-      ],
-    ),
-  ),
-),
-
+          ),
         ],
       ),
     );

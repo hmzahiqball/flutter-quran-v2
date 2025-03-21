@@ -705,6 +705,7 @@ class _AyatItemState extends State<AyatItem> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      backgroundColor: Theme.of(context).colorScheme.background,
       builder: (context) {
         return BookmarkModalWidget(
           title: widget.title,

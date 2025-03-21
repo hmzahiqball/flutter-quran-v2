@@ -22,7 +22,7 @@ class BookmarkModalWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.background,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
@@ -48,7 +48,7 @@ class BookmarkModalWidget extends StatelessWidget {
                 style: GoogleFonts.outfit(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
                 ),
               ),
               const SizedBox(height: 5),

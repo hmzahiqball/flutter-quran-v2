@@ -93,9 +93,9 @@ void initState() {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF9F9F9),
+      backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
-        backgroundColor: Color(0xFFF9F9F9),
+        backgroundColor: Theme.of(context).colorScheme.background,
         elevation: 0,
         leading: IconButton(
           icon: Icon(
