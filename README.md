@@ -1,33 +1,35 @@
 # Proyek Aplikasi Al-Quran Flutter
 
-Terima kasih telah membeli proyek aplikasi Al-Quran Flutter ini. Proyek ini siap untuk Anda kembangkan lebih lanjut. Berikut adalah panduan untuk memulai:
+![Screenshot](assets/images/screenshot.png)
+---
+Ready to take your Flutter skills to the next level? This open-source Quran app is the perfect foundation for building a beautifully designed, feature-rich Islamic application. Whether you're learning, exploring, or planning to deploy, this project gives you a solid head start.
 
-## Persyaratan
+## 🚀 Prerequisites
 
-* Flutter SDK (versi terbaru disarankan)
-* Android Studio atau VS Code dengan plugin Flutter terpasang
-* Android emulator atau perangkat Android fisik
+* Flutter SDK (latest version recommended)
+* Android Studio or VS Code with installed flutter plugin
+* Android emulator or physical device
 
-## Langkah-langkah Instalasi
+## 🔧 Installation Steps
 
-1.  **Instal Flutter SDK:**
-    * Jika Anda belum memiliki Flutter SDK, unduh dan instal dari [situs resmi Flutter](https://flutter.dev/docs/get-started/install).
-    * Pastikan Anda telah menambahkan Flutter ke PATH environment variable Anda.
-2.  **Clone Repositori:**
-    * Ekstrak folder proyek yang Anda terima.
-3.  **Buka Proyek di Editor:**
-    * Buka proyek di Android Studio atau VS Code.
-4.  **Dapatkan Dependensi:**
-    * Buka terminal di direktori proyek dan jalankan perintah:
+1.  **Install Flutter SDK:**
+    * If you haven’t installed Flutter yet, [download it here](https://flutter.dev/docs/get-started/install).
+    * Make sure to add Flutter to your system’s PATH.
+2.  **Clone the Repository:**
+    * Extract the project folder you received, or clone from your preferred source.
+3.  **Open the Project:**
+    * Open the project using Android Studio or VS Code.
+4.  **Install Dependencies:**
+    * Run the following command in your terminal inside the project directory:
 
     ```bash
     flutter pub get
     ```
 
-    * Perintah ini akan mengunduh semua paket yang dibutuhkan oleh proyek.
-5.  **Jalankan Aplikasi:**
-    * Hubungkan perangkat Android Anda atau mulai emulator.
-    * Jalankan perintah berikut di terminal:
+    * This will fetch all required packages.
+5.  **Run the App:**
+    * Connect an Android device or start an emulator.
+    * Launch the app with:
 
     ```bash
     flutter run
@@ -35,21 +37,22 @@ Terima kasih telah membeli proyek aplikasi Al-Quran Flutter ini. Proyek ini siap
 
     * Aplikasi akan berjalan di perangkat atau emulator Anda.
 
-## Struktur Proyek
+## 📁 Project Structure
 
-* `lib/`: Berisi kode sumber aplikasi.
-* `assets/`: Berisi aset seperti gambar, fonts, dan file JSON Surah & Doa.
-* `pubspec.yaml`: Berisi konfigurasi proyek dan daftar dependensi.
+* `lib/`: Main application source code.
+* `assets/`: Contains images, fonts, and JSON files for Surahs and Duas.
+* `pubspec.yaml`: Project configuration and dependency list.
 
-## Catatan Penting
+## ⚠️ Important Notes
 
-* Proyek ini hanya mendukung bahasa Indonesia.
-* Belum ada hak cipta yang terdaftar.
-* Terdapat solusi pengoptimalan play audio yang belum terselesaikan, dimana ketika download audio ayat berikutnya belum selesai, audio akan berhenti.
-* Anda dapat menyesuaikan dan mengembangkan aplikasi ini sesuai kebutuhan Anda.
+* Currently supports Bahasa Indonesia only.
+* No official copyright registered.
+* Feel free to customize and extend the app to suit your needs.
 
-## Kontribusi
+## 🤝 Contribute & Collaborate
 
-Jika Anda menemukan bug atau memiliki saran perbaikan, jangan ragu untuk menghubungi kami.
+Spotted a bug or have a feature in mind? Contributions are welcome! Let’s improve this app together — just open an issue or submit a pull request.
 
-Terima kasih!
+---
+
+Thank you for checking out this project — may it bring benefit to many!
